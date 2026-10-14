@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PBL-only mixing: GCHP 14.7.0 vs AtmosTransport (C90, 1 Dec 2021)</title>
+<style>
+  .viz-root { --surface-1:#fcfcfb; --text-primary:#0b0b0b; --text-secondary:#52514e; --rule:#e4e3df; }
+  body { margin:0; background:var(--surface-1); color:var(--text-primary);
+         font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:1100px; margin:0 auto; padding:24px; }
+  h1 { font-size:1.5rem; margin:0 0 4px; } h2 { font-size:1.15rem; margin:32px 0 8px; }
+  .meta, figcaption, .note { color:var(--text-secondary); }
+  figure { margin:16px 0 28px; } figure img { width:100%; height:auto; border:1px solid var(--rule); }
+  table { border-collapse:collapse; font-variant-numeric:tabular-nums; }
+  th, td { padding:3px 12px; border-bottom:1px solid var(--rule); text-align:right; }
+  th { color:var(--text-secondary); font-weight:600; }
+  ul { padding-left:20px; } code { font-size:0.9em; }
+  a { color:#256abf; }
+</style>
+</head>
+<body class="viz-root">
+<main>
+<p class="meta"><a href="../../">AtmosTransport</a> › forward comparison</p>
+<h1>Boundary-layer mixing only: GCHP 14.7.0 vs AtmosTransport</h1>
+<p class="meta">GEOS-IT meteorology · C90 cubed sphere, native L72 · 2021-12-01 00–24 UTC</p>
+
+<h2>The experiment and why we do it</h2>
+<p>This is the first of a series of idealized forward experiments that compare AtmosTransport with GCHP one
+physical process at a time. Before comparing full simulations, where errors from advection, convection and
+boundary-layer mixing mix together, each process is tested on its own so any difference can be traced to its cause.</p>
+<ul>
+  <li><b>Question:</b> does AtmosTransport's port of GEOS-Chem's non-local boundary-layer scheme mix tracer vertically
+      the same way GCHP does, given the same meteorology, grid and starting field?</li>
+  <li><b>Why only boundary-layer mixing:</b> with advection, convection, emissions and chemistry off, nothing moves the
+      tracer except the mixing scheme, so differences between the models come from the scheme itself, its inputs
+      (PBL height, surface fluxes), its time step, or the air-mass definition.</li>
+  <li><b>Why a surface-layer tracer:</b> CO2 = 1 in the lowest layer and 0 elsewhere is the simplest possible
+      starting field: a mixing scheme can only spread it upward, and how fast it leaves the surface layer measures the
+      mixing strength directly.</li>
+  <li><b>Why one day:</b> long enough to cover a full day-night cycle everywhere (deep daytime boundary layers over land,
+      shallow ones at night), short enough that differences cannot hide behind complete mixing.</li>
+  <li><b>What agreement looks like:</b> identical global profiles and surface-layer fractions, differences limited to
+      known setup differences (time step, air mass). Larger, systematic or regional differences would point to the
+      scheme or its inputs.</li>
+</ul>
+
+<h2>Setup</h2>
+<ul>
+  <li><b>Only process switched on:</b> non-local boundary-layer mixing (GCHP <code>use_non_local_pbl: true</code>;
+      AtmosTransport <code>geoschem_nonlocal_vdiff</code>). No advection, convection, emissions, deposition or chemistry.</li>
+  <li><b>Initial condition (identical in both):</b> CO2 = 1 mol/mol (dry) in the lowest model layer, 0 everywhere else.</li>
+  <li><b>Meteorology:</b> the same raw GEOS-IT C180 files, coarsened 2×2 to C90 by each model.
+      AtmosTransport runs in Float64 on a GPU; GCHP on 24 CPU cores.</li>
+  <li><b>Time step:</b> GCHP mixes every 600 s; AtmosTransport 10–15 sub-steps per hour from its binary schedule.</li>
+  <li><b>Known setup difference:</b> dry air mass per layer is computed differently (GCHP: hybrid levels on dry surface pressure;
+      AtmosTransport: each level's own humidity removed). AtmosTransport's lowest layer holds 0.65% less dry air.</li>
+</ul>
+
+<h2>Key results</h2>
+<ul>
+  <li>Both models move CO2 out of the lowest layer at almost the same rate: about 56% leaves in the first hour,
+      83% by the end of the day.</li>
+  <li>AtmosTransport mixes slightly faster: 0.3–1.4% less tracer stays in the lowest layer (largest in the first hour).</li>
+  <li>Global mean profiles agree to within 0.003 mol/mol at every level and hour; the tracer reaches about 2.5 km by 24 UTC.</li>
+  <li>Cell by cell, lowest-layer values correlate at 0.994–0.999. The largest local differences are over land in the
+      first hours (e.g. western North America at 03 UTC).</li>
+  <li>Tracer mass: AtmosTransport conserves to ~1e-16; GCHP to ±3e-5 over the day.</li>
+</ul>
+
+<h2>Figures</h2>
+<figure><img src="img/fig1_profiles.png" alt="Global mean CO2 profiles at 1, 3, 6, 12 and 24 hours; GCHP and AtmosTransport lines overlap almost exactly.">
+<figcaption><b>Figure 1.</b> Global, air-mass-weighted mean CO2 profile at five times. Altitude is the global mean height of each model level (GCHP box heights).</figcaption></figure>
+<figure><img src="img/fig2_time_height.png" alt="Time-height sections of global mean CO2 for both models, and their difference.">
+<figcaption><b>Figure 2.</b> Global mean CO2 as a function of altitude and time (log colour scale), and the difference AtmosTransport − GCHP (blue: AtmosTransport lower; red: higher).</figcaption></figure>
+<figure><img src="img/fig3_surface_layer.png" alt="Fraction of tracer remaining in the lowest layer over time for both models, and the relative difference.">
+<figcaption><b>Figure 3.</b> Fraction of each model's own tracer that remains in the lowest layer, and the relative difference. Normalising by each model's total removes the 0.65% air-mass offset.</figcaption></figure>
+<figure><img src="img/fig4_maps.png" alt="Maps of lowest-layer CO2 at 03 and 24 UTC for both models, and their difference.">
+<figcaption><b>Figure 4.</b> Lowest-layer CO2 at 03 and 24 UTC and the difference AtmosTransport − GCHP. Each point of a 0.5° display grid shows the nearest C90 cell; the difference colour range is the 99.5th percentile of |Δ|.</figcaption></figure>
+<figure><img src="img/fig5_pblh.png" alt="Maps of GEOS-IT boundary-layer height at 03 and 24 UTC.">
+<figcaption><b>Figure 5.</b> GEOS-IT boundary-layer height as used by GCHP, for context: mixing is fastest where the boundary layer is deep (daytime land).</figcaption></figure>
+
+<h2>Table: tracer remaining in the lowest layer</h2>
+<p class="note">Same data as Figure 3. Download: <a href="summary_table.csv">summary_table.csv</a></p>
+<table>
+<thead><tr><th>Hour (UTC)</th><th>GCHP</th><th>AtmosTransport</th><th>Relative difference (%)</th></tr></thead>
+<tbody>
+<tr><td>01</td><td>0.43828</td><td>0.43211</td><td>-1.408</td></tr>
+<tr><td>02</td><td>0.37498</td><td>0.37145</td><td>-0.942</td></tr>
+<tr><td>03</td><td>0.34617</td><td>0.34262</td><td>-1.027</td></tr>
+<tr><td>04</td><td>0.32671</td><td>0.32339</td><td>-1.016</td></tr>
+<tr><td>05</td><td>0.30960</td><td>0.30663</td><td>-0.961</td></tr>
+<tr><td>06</td><td>0.29220</td><td>0.28954</td><td>-0.909</td></tr>
+<tr><td>07</td><td>0.27393</td><td>0.27085</td><td>-1.124</td></tr>
+<tr><td>08</td><td>0.25737</td><td>0.25440</td><td>-1.158</td></tr>
+<tr><td>09</td><td>0.24496</td><td>0.24225</td><td>-1.106</td></tr>
+<tr><td>10</td><td>0.23511</td><td>0.23236</td><td>-1.172</td></tr>
+<tr><td>11</td><td>0.22512</td><td>0.22262</td><td>-1.109</td></tr>
+<tr><td>12</td><td>0.21609</td><td>0.21413</td><td>-0.907</td></tr>
+<tr><td>13</td><td>0.20858</td><td>0.20649</td><td>-1.003</td></tr>
+<tr><td>14</td><td>0.20187</td><td>0.19986</td><td>-0.993</td></tr>
+<tr><td>15</td><td>0.19677</td><td>0.19492</td><td>-0.938</td></tr>
+<tr><td>16</td><td>0.19269</td><td>0.19087</td><td>-0.943</td></tr>
+<tr><td>17</td><td>0.18854</td><td>0.18701</td><td>-0.811</td></tr>
+<tr><td>18</td><td>0.18434</td><td>0.18328</td><td>-0.575</td></tr>
+<tr><td>19</td><td>0.18088</td><td>0.18000</td><td>-0.488</td></tr>
+<tr><td>20</td><td>0.17815</td><td>0.17740</td><td>-0.420</td></tr>
+<tr><td>21</td><td>0.17611</td><td>0.17545</td><td>-0.376</td></tr>
+<tr><td>22</td><td>0.17446</td><td>0.17381</td><td>-0.377</td></tr>
+<tr><td>23</td><td>0.17310</td><td>0.17246</td><td>-0.375</td></tr>
+<tr><td>24</td><td>0.17184</td><td>0.17123</td><td>-0.354</td></tr>
+</tbody>
+</table>
+
+<p class="note" style="margin-top:32px">Models: GCHP 14.7.0; AtmosTransport.jl (main 740ee1f9 plus a GEOS-IT EFLUX pass-through needed for the non-local scheme).
+Generated 2026-10-14.</p>
+</main>
+</body>
+</html>

@@ -80,6 +80,24 @@ boundary-layer mixing mix together, each process is tested on its own so any dif
 <figure><img src="img/fig5_pblh.png" alt="Maps of GEOS-IT boundary-layer height at 03 and 24 UTC.">
 <figcaption><b>Figure 5.</b> GEOS-IT boundary-layer height as used by GCHP, for context: mixing is fastest where the boundary layer is deep (daytime land).</figcaption></figure>
 
+<h2>Movie: zonal-mean cross-section through the day</h2>
+<p><b>What it shows and why:</b> the global mean profiles above average away where the mixing happens. The zonal
+mean (CO2 averaged around each latitude circle, weighted by air mass, in 2° bands) keeps the latitude dependence, so
+the movie shows <i>where</i> and <i>when</i> the boundary layer lifts the tracer, and whether the two models differ in
+particular regions or at particular times of day. Each frame is one hour, from the shared initial condition at 00 UTC
+to 24 UTC.</p>
+<figure>
+<video controls loop muted playsinline preload="metadata" poster="movies/movie_zonal_mean_poster.png" style="width:100%;border:1px solid var(--rule)">
+  <source src="movies/movie_zonal_mean.mp4" type="video/mp4">
+  Your browser cannot play this video; <a href="movies/movie_zonal_mean.mp4">download it</a>.
+</video>
+<figcaption><b>Movie 1.</b> Zonal-mean CO2 (log colour scale) for GCHP and AtmosTransport, and the difference
+AtmosTransport − GCHP (blue: AtmosTransport lower; red: higher; colour range = 99.9th percentile of |Δ|, 0.012 mol/mol).
+The deepest mixing is in the southern subtropics (December: southern-hemisphere summer), reaching about 4.5 km by
+24 UTC. Differences stay in the lowest ~1 km: AtmosTransport is lower in the lowest layers and higher just above,
+consistent with its slightly faster mixing (Figure 3); the largest zonal-mean difference is 0.019 mol/mol.</figcaption>
+</figure>
+
 <h2>Table: tracer remaining in the lowest layer</h2>
 <p class="note">Same data as Figure 3. Download: <a href="summary_table.csv">summary_table.csv</a></p>
 <table>

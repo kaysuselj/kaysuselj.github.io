@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PBL-only mixing: matching AtmosTransport to GCHP 14.7.0, step by step (C90, 1 Dec 2021)</title>
+<style>
+  .viz-root { --surface-1:#fcfcfb; --text-primary:#0b0b0b; --text-secondary:#52514e; --rule:#e4e3df; }
+  body { margin:0; background:var(--surface-1); color:var(--text-primary);
+         font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:1100px; margin:0 auto; padding:24px; }
+  h1 { font-size:1.5rem; margin:0 0 4px; } h2 { font-size:1.15rem; margin:32px 0 8px; }
+  h3 { font-size:1rem; margin:20px 0 6px; }
+  .meta, figcaption, .note { color:var(--text-secondary); }
+  figure { margin:16px 0 28px; } figure img { width:100%; height:auto; border:1px solid var(--rule); }
+  table { border-collapse:collapse; font-variant-numeric:tabular-nums; margin:8px 0 16px; }
+  th, td { padding:5px 10px; border-bottom:1px solid var(--rule); text-align:left; vertical-align:top; }
+  th { color:var(--text-secondary); font-weight:600; }
+  td.num, th.num { text-align:right; }
+  ul { padding-left:20px; } li { margin:4px 0; } code { font-size:0.9em; }
+  pre { background:#f2f1ed; padding:10px 12px; overflow-x:auto; font-size:0.85em; border:1px solid var(--rule); }
+  a { color:#256abf; }
+  .box { border-left:3px solid #256abf; padding:4px 12px; margin:12px 0; background:#f4f8fd; }
+</style>
+</head>
+<body class="viz-root">
+<main>
+<p class="meta"><a href="../../">AtmosTransport</a> › forward comparison</p>
+<h1>Boundary-layer mixing only: matching AtmosTransport to GCHP, step by step</h1>
+<p class="meta">GEOS-IT meteorology · C90 cubed sphere, native L72 · 2021-12-01 00–24 UTC ·
+page generated 2026-10-15 20:45 UTC (each figure carries its own "Made" time) ·
+earlier steps: <a href="../pblonly_c90_20211201/">first comparison</a>,
+<a href="../pblonly_c90_20211201_gchplike/">matched air mass</a></p>
+
+<div class="box"><b>In short.</b> GCHP 14.7.0 is the reference. To make AtmosTransport mix the boundary layer the
+way GCHP does, AtmosTransport needed <b>four changes</b> (two new preprocessing options, two code fixes) and
+<b>two settings</b>; GCHP itself was left at its defaults except that its time step was shortened from 600 s to
+240 s, because AtmosTransport cannot step at 600 s. With all changes the cell-by-cell difference of the
+lowest-layer tracer fell from 0.015–0.027 to 0.002–0.006 mol/mol, and the fraction of tracer left in the lowest layer
+agrees to within +0.15–0.3 % (it was off by −0.35 to −1.4 %).</div>
+
+<h2>The experiment and why we do it</h2>
+<ul>
+  <li><b>Question:</b> given identical meteorology, grid and initial tracer, do AtmosTransport and GCHP mix a surface
+      tracer up through the boundary layer at the same rate? If not, which modelling choices cause the difference?
+      This is the first of a series that compares one transport process at a time, so that each difference can be
+      traced to its cause before processes are combined.</li>
+  <li><b>What is on and off:</b> only boundary-layer (PBL) mixing, GEOS-Chem's non-local scheme in both models.
+      Advection, convection, chemistry, emissions and deposition are off in both, so nothing else moves the
+      tracer.</li>
+  <li><b>Initial condition and period:</b> a CO2 tracer of 1 mol/mol (dry) in the lowest model layer and 0 above,
+      everywhere on the globe, at 2021-12-01 00 UTC; 24 hours, output every hour.</li>
+  <li><b>Meteorology and grid:</b> GEOS-IT; GCHP reads the C180 files and regrids to C90 itself, AtmosTransport
+      reads a C90 binary preprocessed from the same C180 files; both on the native 72 levels.</li>
+  <li><b>What agreement looks like:</b> the same fraction of tracer left in the lowest layer at every hour (global
+      mass-weighted), and lowest-layer maps that differ only at the level of numerical noise. A systematic offset
+      in the fraction means one model mixes faster; a large cell-by-cell difference means the models see
+      different inputs or make different local choices.</li>
+</ul>
+
+<h2>The reference: GCHP 14.7.0</h2>
+<p>A standard GCHP 14.7.0 run directory (created with <code>createRunDir.sh</code>, TransportTracers simulation with a CO2 tracer added). Changed from
+its defaults, for the experiment only:</p>
+<ul>
+  <li><code>geoschem_config.yml</code>: only <code>pbl_mixing</code> is active (<code>use_non_local_pbl: true</code>);
+      transport, convection, chemistry, dry and wet deposition are switched off; HEMCO <code>EMISSIONS: false</code>.</li>
+  <li><b>Time step 600 s → 240 s</b> (<code>HEARTBEAT_DT</code>, <code>RUN_DT</code>, … = 240; chemistry step 720 s,
+      unused). This is the only change to how GCHP computes the mixing. The reason is on the AtmosTransport side:
+      its PBL mixing runs once per transport substep, and the number of substeps per hour is set by the flow (18–22 per
+      hour on this day, about 3 min each). It cannot step at GCHP's 600 s, so both models were brought to a common
+      240 s (15 substeps per hour).</li>
+</ul>
+
+<h2>How AtmosTransport had to be modified to match GCHP</h2>
+<p>All changes are on AtmosTransport's side, in the order they were found. Changes 1–4 are code; the new options are
+off by default, so existing AtmosTransport runs are unchanged.</p>
+<table>
+<tr><th>#</th><th>What AtmosTransport did by default</th><th>What GCHP does</th><th>What we changed</th><th>Effect</th></tr>
+<tr><td>1</td>
+  <td>GEOS-IT binaries carried no latent heat flux, so GEOS-Chem's non-local PBL scheme could not run on GEOS-IT at all.</td>
+  <td>Reads <code>EFLUX</code> from the GEOS-IT A1 files.</td>
+  <td><b>Code:</b> pass GEOS-IT <code>EFLUX</code> through to the binary (<code>pbl_eflux</code>).</td>
+  <td>Prerequisite; already used in the first comparison.</td></tr>
+<tr><td>2</td>
+  <td>Dry air per layer: each layer loses its own water vapour, <code>Δp_dry = (1 − q) Δp</code>.</td>
+  <td>GEOS-Chem's dry hybrid coordinate: <code>Δp_dry = ΔA + ΔB · p_s,dry</code>; the column's water is removed in
+      proportion to ΔB.</td>
+  <td><b>New option</b> <code>dry_mass_layers = "geoschem_hybrid"</code> (preprocessing).</td>
+  <td>AtmosTransport's lowest layer held 0.65 % less dry air than GCHP's; now equal to 4e-7.</td></tr>
+<tr><td>3</td>
+  <td>Pinned the global mean dry surface pressure to 98,325 Pa in every window.</td>
+  <td>No global pin: each window follows the met file's surface pressure.</td>
+  <td><b>Setting</b> <code>[mass_fix] enable = false</code> (preprocessing).</td>
+  <td>Removes a +0.02 % offset in column dry air.</td></tr>
+<tr><td>4</td>
+  <td>The PBL scheme rebuilds each column's moist pressures from the dry air mass, assuming the default split of change 2.
+      With the GEOS-Chem split this made the lowest layer 0.65 % too thick inside the scheme.</td>
+  <td>Uses the met moist pressure edges directly.</td>
+  <td><b>Code fix:</b> the scheme reads the binary's dry-air split from its header and rebuilds the moist column
+      to match (edges <code>A + B p_s</code> with <code>p_s</code> recovered from the dry column).</td>
+  <td>Moist geometry inside the scheme now equals GCHP's to rounding.</td></tr>
+<tr><td>5</td>
+  <td>Adaptive transport substeps, 18–22 per hour (164–200 s).</td>
+  <td>One step per <code>HEARTBEAT_DT</code> (default 600 s; here 240 s).</td>
+  <td><b>Setting</b> <code>min_steps_per_window = max_steps_per_window = 15</code> (240 s), with GCHP at 240 s.</td>
+  <td>Removes the time-step difference; explained the first-hour gap.</td></tr>
+<tr><td>6</td>
+  <td>The scheme's temperature (3-hourly GEOS-IT I3 file, records at 00, 03, … UTC) was held at the record at the start
+      of each 3-hour block, so it was up to 3 h old.</td>
+  <td>Interpolates the I3 temperature linearly in time at every step (ExtData <code>TMPU1/TMPU2</code>; confirmed
+      from GCHP's own 20-minute temperature output).</td>
+  <td><b>New option</b> <code>vdiff_temperature_time = "window_midpoint"</code>: temperature interpolated in time to the middle
+      of each hourly window.</td>
+  <td>The largest single improvement: the cell-by-cell difference fell 3–5×.</td></tr>
+</table>
+<p>The final AtmosTransport preprocessing settings that differ from the default GEOS-IT C90 profile:</p>
+<pre>[source]
+dry_mass_layers        = "geoschem_hybrid"   # change 2 (default "level_humidity")
+vdiff_temperature_time = "window_midpoint"   # change 6 (default "block_start")
+
+[numerics]
+min_steps_per_window   = 15                  # change 5: 240 s steps (default adaptive, 1..512)
+max_steps_per_window   = 15
+
+[mass_fix]
+enable                 = false               # change 3 (default: pin to 98,325 Pa)</pre>
+<p class="note">The AtmosTransport run configuration itself is the same in all stages: advection <code>"none"</code>,
+diffusion <code>"geoschem_nonlocal_vdiff"</code>, convection <code>"none"</code>, Float64 on GPU. Already the same in
+both models before any change: all 72 native levels, hourly surface pressure and humidity from the CTM_I1 files, the
+hourly PBL inputs (PBL height, friction velocity, heat fluxes), and the 3-hourly winds held over each 3-hour block.
+The changes are on the local AtmosTransport branch <code>feature/gchp-like</code> (commits dcd5bbb1, 944e4824,
+64efeba6) and are not yet on GitHub.</p>
+
+<h2>Results: how the difference shrank with each change</h2>
+<figure><img src="img/stages_fraction.png" alt="Relative difference of the fraction of tracer in the lowest layer, per stage">
+<figcaption>Fraction of the tracer still in the lowest layer, AtmosTransport relative to GCHP (0 = agreement).
+Negative means AtmosTransport mixes faster. Stage 1: −1.4 % at 1 h, −0.35 % at 24 h. Stage 4 (all changes): +0.15 to
++0.32 %. Stage 2 looks closer than stage 3 only because two errors cancelled in it: the scheme-geometry error
+(change 4) and GCHP's longer 600 s step pushed in opposite directions. Fixing both (stage 3) exposed the
+temperature-timing difference, which stage 4 removes.</figcaption></figure>
+<figure><img src="img/stages_rms.png" alt="Cell RMS difference of lowest-layer CO2, per stage">
+<figcaption>Cell-by-cell difference: RMS over all C90 cells of AtmosTransport − GCHP in the lowest layer (mol/mol;
+the tracer started at 1). Changes 2–5 barely move it; the temperature timing (change 6) cuts it from 0.015–0.027 to
+0.002–0.006 over the first 17 hours.</figcaption></figure>
+
+<h3>Why the middle of the hour</h3>
+<figure><img src="img/tsample.png" alt="Temperature sampled at window start, midpoint and end">
+<figcaption>AtmosTransport uses one temperature per hourly window; GCHP updates it every 240 s. Sampling at the
+window midpoint (green) gives a 2–3× smaller cell-by-cell difference than sampling at the start or end of the
+hour, so the option uses the midpoint. Sampling at the start and at the end both mix slightly more than the
+midpoint: the mixing responds non-linearly to temperature, so GCHP's per-step update mixes a little more than any
+single value per hour. Weighting the three runs as an average over the hour (start + 4 × midpoint + end, divided by 6) suggests
+per-step updates would bring the remaining offset to about +0.1 %.</figcaption></figure>
+
+<h2>Final comparison (all changes)</h2>
+<figure><img src="img/fig3_surface_layer.png" alt="Fraction in lowest layer, both models">
+<figcaption>Left: fraction of the tracer left in the lowest layer, both models (the lines overlap). Right: relative
+difference.</figcaption></figure>
+<figure><img src="img/fig1_profiles.png" alt="Global mean profiles">
+<figcaption>Global mean CO2 profile at selected hours.</figcaption></figure>
+<figure><img src="img/fig2_time_height.png" alt="Time-height">
+<figcaption>Global mean CO2 against altitude and time, and the difference AtmosTransport − GCHP.</figcaption></figure>
+<figure><img src="img/fig4_maps.png" alt="Maps of lowest-layer CO2">
+<figcaption>Lowest-layer CO2 at 03 and 24 UTC in both models and their difference (colour range: 99.5th percentile of
+|Δ|, about 0.01 mol/mol at 03 UTC and 0.007 at 24 UTC).</figcaption></figure>
+<figure><img src="img/fig5_pblh.png" alt="PBL height">
+<figcaption>GEOS-IT PBL height (GCHP's input) at the same hours, for context.</figcaption></figure>
+<p>Numbers: <a href="stages_table.csv">stages_table.csv</a> (all stages and hours),
+<a href="summary_table.csv">summary_table.csv</a> (final run).</p>
+
+<h2>What is left, and what was ruled out</h2>
+<ul>
+  <li><b>Remaining:</b> AtmosTransport keeps 0.15–0.3 % more tracer in the lowest layer than GCHP. About half of it
+      is probably the per-step temperature update above. The rest, about 0.1 %, is near the noise and would point to
+      small differences in the two implementations of the scheme (Richardson-number closure, choice of the PBL-top
+      level, tridiagonal solver); a single-column comparison would settle it.</li>
+  <li><b>Ruled out:</b>
+    <ul>
+      <li>timing of the PBL inputs: both use the A1 record stamped HH:30 for HH:00–HH+1:00;</li>
+      <li>PBL height regridding C180 → C90 (4e-4);</li>
+      <li>wind timing: both hold the 3-hourly A3dyn winds over each block;</li>
+      <li>humidity timing (no measurable effect);</li>
+      <li>mixing-ratio basis: GCHP solves on moist layer weights and then rescales each column, AtmosTransport on dry air.
+          The rate difference is 0.01 % and of the wrong sign;</li>
+      <li>GCHP also mixes humidity and then updates mixing ratios, but its dry layer thickness depends only on the
+          dry surface pressure, so the rescale factor is exactly 1.</li>
+    </ul></li>
+</ul>
+
+<p class="meta">Scripts: <code>compare_pblonly.jl</code>, <code>plot_pblonly.py</code>,
+<code>plot_pblonly_stages.py</code>, <code>check_met3d_timing.jl</code>. Page generated 2026-10-15 20:45 UTC.</p>
+</main>
+</body>
+</html>

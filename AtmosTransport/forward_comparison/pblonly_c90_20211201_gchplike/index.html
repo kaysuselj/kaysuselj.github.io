@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PBL-only mixing with matched air mass: GCHP 14.7.0 vs AtmosTransport (C90, 1 Dec 2021)</title>
+<style>
+  .viz-root { --surface-1:#fcfcfb; --text-primary:#0b0b0b; --text-secondary:#52514e; --rule:#e4e3df; }
+  body { margin:0; background:var(--surface-1); color:var(--text-primary);
+         font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:1100px; margin:0 auto; padding:24px; }
+  h1 { font-size:1.5rem; margin:0 0 4px; } h2 { font-size:1.15rem; margin:32px 0 8px; }
+  .meta, figcaption, .note { color:var(--text-secondary); }
+  figure { margin:16px 0 28px; } figure img { width:100%; height:auto; border:1px solid var(--rule); }
+  table { border-collapse:collapse; font-variant-numeric:tabular-nums; }
+  th, td { padding:3px 12px; border-bottom:1px solid var(--rule); text-align:right; }
+  th { color:var(--text-secondary); font-weight:600; }
+  td:first-child, th:first-child { text-align:left; }
+  ul { padding-left:20px; } code { font-size:0.9em; }
+  a { color:#256abf; }
+</style>
+</head>
+<body class="viz-root">
+<main>
+<p class="meta"><a href="../../">AtmosTransport</a> › forward comparison</p>
+<h1>Boundary-layer mixing only, with matched air mass: GCHP 14.7.0 vs AtmosTransport</h1>
+<p class="meta">GEOS-IT meteorology · C90 cubed sphere, native L72 · 2021-12-01 00–24 UTC ·
+follow-up to <a href="../pblonly_c90_20211201/">the first PBL-only comparison</a></p>
+
+<h2>The experiment and why we do it</h2>
+<p>The <a href="../pblonly_c90_20211201/">first PBL-only comparison</a> found that AtmosTransport moves CO2 out of the
+lowest layer 0.3–1.4% faster than GCHP. It also found a known setup difference that could cause part of this: the two
+models split the column's dry air among the levels differently, so AtmosTransport's lowest layer held 0.65% less dry air
+(GCHP applies the hybrid-level formula to a dry surface pressure; AtmosTransport removes each layer's own water vapour). This experiment removes that difference and asks how much of the mixing
+difference is left.</p>
+<ul>
+  <li><b>Question:</b> once both models use the same dry air mass in every layer, do they mix the surface-layer tracer at the
+      same rate? Whatever difference remains must come from the mixing scheme itself, its time step, or its inputs.</li>
+  <li><b>What changed from the first experiment:</b> only AtmosTransport's input binary. It is preprocessed with the new
+      opt-in option <code>dry_mass_layers = "geoschem_hybrid"</code>, which computes each layer's dry air the GEOS-Chem way
+      (ΔA + ΔB·p<sub>s,dry</sub>), and without AtmosTransport's global dry-mass pin, since GCHP has none
+      (the <code>gchp_like</code> profile, branch <code>feature/geoschem-dry-mass</code>). GCHP is the same run as before.</li>
+  <li><b>Everything else is identical:</b> only non-local boundary-layer mixing is on; CO2 = 1 mol/mol (dry) in the lowest
+      layer and 0 elsewhere; same GEOS-IT meteorology, grid, period and output.</li>
+  <li><b>What agreement looks like:</b> identical air mass and starting tracer amount, and a mixing difference that is small
+      and has no sign that persists through the day. A remaining systematic difference points to the scheme or the time step.</li>
+</ul>
+
+<h2>Setup</h2>
+<ul>
+  <li><b>Process:</b> non-local boundary-layer mixing only (GCHP <code>use_non_local_pbl: true</code>;
+      AtmosTransport <code>geoschem_nonlocal_vdiff</code>).</li>
+  <li><b>Air mass:</b> AtmosTransport binary built with <code>dry_mass_layers = "geoschem_hybrid"</code>, no pin. Per-level
+      global dry air mass matches GCHP's <code>Met_AD</code> to 4×10⁻⁷ at every hour (was up to 0.65%).</li>
+  <li><b>Time step (unchanged, still different):</b> GCHP mixes every 600 s; AtmosTransport 10–15 sub-steps per hour.</li>
+  <li><b>Models:</b> GCHP 14.7.0 (CPU, 24 cores); AtmosTransport.jl (Float64, GPU) with the GEOS-IT EFLUX pass-through (PR #73)
+      and the dry-mass option.</li>
+</ul>
+
+<h2>Key results</h2>
+<table>
+<thead><tr><th>Measure</th><th>First experiment (default air mass)</th><th>This experiment (matched air mass)</th></tr></thead>
+<tbody>
+<tr><td>Global air-mass difference, AtmosTransport vs GCHP</td><td>+2×10⁻⁴</td><td>−3×10⁻⁷</td></tr>
+<tr><td>Largest single-cell air-mass difference</td><td>1.7%</td><td>0.14%</td></tr>
+<tr><td>Tracer amount offset between the models</td><td>+0.65% (constant)</td><td>none (within 3×10⁻⁵)</td></tr>
+<tr><td>Tracer left in lowest layer, relative difference at 1 h</td><td>−1.4%</td><td>−1.0%</td></tr>
+<tr><td>… at 6 h / 12 h</td><td>−0.9% / −0.9%</td><td>−0.4% / −0.3%</td></tr>
+<tr><td>… at 24 h</td><td>−0.4%</td><td>+0.16%</td></tr>
+<tr><td>Lowest-layer VMR, cell-by-cell RMS difference</td><td>0.005–0.027</td><td>0.004–0.026</td></tr>
+</tbody>
+</table>
+<ul>
+  <li>Matching the air mass removes the tracer offset and roughly halves the mixing difference for most of the day;
+      by 24 UTC AtmosTransport is 0.16% <i>slower</i> than GCHP, so there is no longer a persistent sign.</li>
+  <li>The first hour still stands out (AtmosTransport −1.0%), and local cell-by-cell differences are about as large as before.
+      These are the next things to explain: the different time steps (600 s vs a few minutes) are the leading candidate,
+      followed by how each model regrids the C180 meteorology to C90.</li>
+</ul>
+
+<h2>Figures</h2>
+<figure><img src="img/fig1_profiles.png" alt="Global mean CO2 profiles at 1, 3, 6, 12 and 24 hours for both models.">
+<figcaption><b>Figure 1.</b> Global, air-mass-weighted mean CO2 profile at five times. Altitude is the global mean height of each model level (GCHP box heights).</figcaption></figure>
+<figure><img src="img/fig2_time_height.png" alt="Time-height sections of global mean CO2 for both models, and their difference.">
+<figcaption><b>Figure 2.</b> Global mean CO2 versus altitude and time (log colour scale), and the difference AtmosTransport − GCHP (blue: AtmosTransport lower; red: higher).</figcaption></figure>
+<figure><img src="img/fig3_surface_layer.png" alt="Fraction of tracer remaining in the lowest layer over time for both models, and the relative difference.">
+<figcaption><b>Figure 3.</b> Fraction of each model's tracer that remains in the lowest layer, and the relative difference. Compare with Figure 3 of the first experiment: the difference is now smaller and changes sign near 19 UTC.</figcaption></figure>
+<figure><img src="img/fig4_maps.png" alt="Maps of lowest-layer CO2 at 03 and 24 UTC for both models, and their difference.">
+<figcaption><b>Figure 4.</b> Lowest-layer CO2 at 03 and 24 UTC and the difference AtmosTransport − GCHP (0.5° display grid, nearest C90 cell; difference colour range = 99.5th percentile of |Δ|).</figcaption></figure>
+<figure><img src="img/fig5_pblh.png" alt="Maps of GEOS-IT boundary-layer height at 03 and 24 UTC.">
+<figcaption><b>Figure 5.</b> GEOS-IT boundary-layer height as used by GCHP, for context.</figcaption></figure>
+
+<h2>Movie: zonal-mean cross-section through the day</h2>
+<p><b>What it shows and why:</b> CO2 averaged around each latitude circle (air-mass weighted, 2° bands), hour by hour, so
+regional and time-of-day differences between the models stay visible. Compare with the movie of the first experiment.</p>
+<figure>
+<video controls loop muted playsinline preload="metadata" poster="movies/movie_zonal_mean_poster.png" style="width:100%;border:1px solid var(--rule)">
+  <source src="movies/movie_zonal_mean.mp4" type="video/mp4">
+  Your browser cannot play this video; <a href="movies/movie_zonal_mean.mp4">download it</a>.
+</video>
+<figcaption><b>Movie 1.</b> Zonal-mean CO2 (log scale) for both models and the difference AtmosTransport − GCHP (colour range = 99.9th percentile of |Δ|, 0.011 mol/mol; largest zonal-mean difference 0.018 mol/mol).</figcaption>
+</figure>
+
+<h2>Table: tracer remaining in the lowest layer</h2>
+<p class="note">Same data as Figure 3. Download: <a href="summary_table.csv">summary_table.csv</a></p>
+<table>
+<thead><tr><th>Hour (UTC)</th><th>GCHP</th><th>AtmosTransport</th><th>Relative difference (%)</th></tr></thead>
+<tbody>
+<tr><td>01</td><td>0.43828</td><td>0.43373</td><td>-1.037</td></tr>
+<tr><td>02</td><td>0.37498</td><td>0.37289</td><td>-0.558</td></tr>
+<tr><td>03</td><td>0.34617</td><td>0.34401</td><td>-0.624</td></tr>
+<tr><td>04</td><td>0.32671</td><td>0.32478</td><td>-0.590</td></tr>
+<tr><td>05</td><td>0.30960</td><td>0.30802</td><td>-0.511</td></tr>
+<tr><td>06</td><td>0.29220</td><td>0.29094</td><td>-0.431</td></tr>
+<tr><td>07</td><td>0.27393</td><td>0.27226</td><td>-0.609</td></tr>
+<tr><td>08</td><td>0.25737</td><td>0.25577</td><td>-0.622</td></tr>
+<tr><td>09</td><td>0.24496</td><td>0.24359</td><td>-0.558</td></tr>
+<tr><td>10</td><td>0.23511</td><td>0.23370</td><td>-0.600</td></tr>
+<tr><td>11</td><td>0.22512</td><td>0.22392</td><td>-0.531</td></tr>
+<tr><td>12</td><td>0.21609</td><td>0.21537</td><td>-0.333</td></tr>
+<tr><td>13</td><td>0.20858</td><td>0.20765</td><td>-0.447</td></tr>
+<tr><td>14</td><td>0.20187</td><td>0.20094</td><td>-0.458</td></tr>
+<tr><td>15</td><td>0.19677</td><td>0.19595</td><td>-0.416</td></tr>
+<tr><td>16</td><td>0.19269</td><td>0.19187</td><td>-0.423</td></tr>
+<tr><td>17</td><td>0.18854</td><td>0.18797</td><td>-0.301</td></tr>
+<tr><td>18</td><td>0.18434</td><td>0.18421</td><td>-0.073</td></tr>
+<tr><td>19</td><td>0.18088</td><td>0.18091</td><td>+0.015</td></tr>
+<tr><td>20</td><td>0.17815</td><td>0.17830</td><td>+0.084</td></tr>
+<tr><td>21</td><td>0.17611</td><td>0.17634</td><td>+0.132</td></tr>
+<tr><td>22</td><td>0.17446</td><td>0.17470</td><td>+0.133</td></tr>
+<tr><td>23</td><td>0.17310</td><td>0.17334</td><td>+0.138</td></tr>
+<tr><td>24</td><td>0.17184</td><td>0.17212</td><td>+0.159</td></tr>
+</tbody>
+</table>
+
+<p class="note" style="margin-top:32px">Models: GCHP 14.7.0; AtmosTransport.jl main 740ee1f9 + GEOS-IT EFLUX pass-through (PR #73) + opt-in GEOS-Chem dry air per layer (branch feature/geoschem-dry-mass, PR pending).
+Generated 2026-10-15.</p>
+</main>
+</body>
+</html>

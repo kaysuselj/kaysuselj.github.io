@@ -1,0 +1,98 @@
+# made 2026-10-16 00:26 UTC
+stage,hour_utc,frac_lowest_gchp,frac_lowest_at,rel_diff_percent,cell_rms_lowest_vmr
+"AT RAS form, convection once per hour (AT default)",1,0.42596,0.42419,-0.415,0.03231
+"AT RAS form, convection once per hour (AT default)",2,0.36491,0.36515,+0.065,0.02027
+"AT RAS form, convection once per hour (AT default)",3,0.33464,0.33536,+0.217,0.01555
+"AT RAS form, convection once per hour (AT default)",4,0.31295,0.31267,-0.090,0.02051
+"AT RAS form, convection once per hour (AT default)",5,0.29351,0.29369,+0.062,0.01622
+"AT RAS form, convection once per hour (AT default)",6,0.27391,0.27447,+0.203,0.01476
+"AT RAS form, convection once per hour (AT default)",7,0.25379,0.25330,-0.196,0.02022
+"AT RAS form, convection once per hour (AT default)",8,0.23570,0.23558,-0.050,0.01542
+"AT RAS form, convection once per hour (AT default)",9,0.22198,0.22220,+0.103,0.01275
+"AT RAS form, convection once per hour (AT default)",10,0.21097,0.21062,-0.164,0.01946
+"AT RAS form, convection once per hour (AT default)",11,0.19990,0.19983,-0.036,0.01526
+"AT RAS form, convection once per hour (AT default)",12,0.19002,0.19022,+0.103,0.01143
+"AT RAS form, convection once per hour (AT default)",13,0.18185,0.18174,-0.057,0.01265
+"AT RAS form, convection once per hour (AT default)",14,0.17477,0.17481,+0.024,0.01060
+"AT RAS form, convection once per hour (AT default)",15,0.16934,0.16946,+0.071,0.00941
+"AT RAS form, convection once per hour (AT default)",16,0.16477,0.16475,-0.012,0.00974
+"AT RAS form, convection once per hour (AT default)",17,0.15998,0.16009,+0.066,0.00751
+"AT RAS form, convection once per hour (AT default)",18,0.15511,0.15532,+0.132,0.00671
+"AT RAS form, convection once per hour (AT default)",19,0.15102,0.15110,+0.057,0.00608
+"AT RAS form, convection once per hour (AT default)",20,0.14768,0.14780,+0.084,0.00572
+"AT RAS form, convection once per hour (AT default)",21,0.14509,0.14523,+0.099,0.00552
+"AT RAS form, convection once per hour (AT default)",22,0.14293,0.14298,+0.031,0.00572
+"AT RAS form, convection once per hour (AT default)",23,0.14109,0.14116,+0.050,0.00549
+"AT RAS form, convection once per hour (AT default)",24,0.13937,0.13946,+0.063,0.00529
+"AT Grell-Freitas form, convection once per hour",1,0.42596,0.43045,+1.055,0.00973
+"AT Grell-Freitas form, convection once per hour",2,0.36491,0.36802,+0.853,0.00697
+"AT Grell-Freitas form, convection once per hour",3,0.33464,0.33718,+0.761,0.00673
+"AT Grell-Freitas form, convection once per hour",4,0.31295,0.31514,+0.698,0.00544
+"AT Grell-Freitas form, convection once per hour",5,0.29351,0.29553,+0.688,0.00521
+"AT Grell-Freitas form, convection once per hour",6,0.27391,0.27595,+0.741,0.00710
+"AT Grell-Freitas form, convection once per hour",7,0.25379,0.25548,+0.665,0.00456
+"AT Grell-Freitas form, convection once per hour",8,0.23570,0.23728,+0.670,0.00431
+"AT Grell-Freitas form, convection once per hour",9,0.22198,0.22356,+0.713,0.00517
+"AT Grell-Freitas form, convection once per hour",10,0.21097,0.21239,+0.675,0.00402
+"AT Grell-Freitas form, convection once per hour",11,0.19990,0.20128,+0.691,0.00371
+"AT Grell-Freitas form, convection once per hour",12,0.19002,0.19140,+0.725,0.00524
+"AT Grell-Freitas form, convection once per hour",13,0.18185,0.18309,+0.685,0.00337
+"AT Grell-Freitas form, convection once per hour",14,0.17477,0.17596,+0.682,0.00327
+"AT Grell-Freitas form, convection once per hour",15,0.16934,0.17047,+0.667,0.00324
+"AT Grell-Freitas form, convection once per hour",16,0.16477,0.16586,+0.662,0.00309
+"AT Grell-Freitas form, convection once per hour",17,0.15998,0.16102,+0.647,0.00254
+"AT Grell-Freitas form, convection once per hour",18,0.15511,0.15613,+0.656,0.00293
+"AT Grell-Freitas form, convection once per hour",19,0.15102,0.15194,+0.609,0.00176
+"AT Grell-Freitas form, convection once per hour",20,0.14768,0.14857,+0.600,0.00170
+"AT Grell-Freitas form, convection once per hour",21,0.14509,0.14594,+0.587,0.00180
+"AT Grell-Freitas form, convection once per hour",22,0.14293,0.14375,+0.570,0.00157
+"AT Grell-Freitas form, convection once per hour",23,0.14109,0.14188,+0.557,0.00153
+"AT Grell-Freitas form, convection once per hour",24,0.13937,0.14013,+0.543,0.00152
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",1,0.42596,0.42768,+0.405,0.00633
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",2,0.36491,0.36610,+0.327,0.00498
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",3,0.33464,0.33570,+0.317,0.00563
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",4,0.31295,0.31386,+0.290,0.00441
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",5,0.29351,0.29439,+0.301,0.00432
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",6,0.27391,0.27495,+0.377,0.00661
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",7,0.25379,0.25457,+0.307,0.00385
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",8,0.23570,0.23644,+0.312,0.00366
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",9,0.22198,0.22279,+0.367,0.00473
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",10,0.21097,0.21165,+0.324,0.00348
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",11,0.19990,0.20056,+0.332,0.00313
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",12,0.19002,0.19073,+0.372,0.00488
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",13,0.18185,0.18243,+0.324,0.00282
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",14,0.17477,0.17532,+0.316,0.00274
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",15,0.16934,0.16988,+0.317,0.00278
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",16,0.16477,0.16528,+0.309,0.00261
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",17,0.15998,0.16045,+0.294,0.00198
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",18,0.15511,0.15560,+0.313,0.00251
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",19,0.15102,0.15142,+0.268,0.00098
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",20,0.14768,0.14807,+0.263,0.00093
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",21,0.14509,0.14547,+0.263,0.00119
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",22,0.14293,0.14330,+0.258,0.00090
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",23,0.14109,0.14145,+0.256,0.00088
+"AT Grell-Freitas form, convection every 240 s (as GCHP)",24,0.13937,0.13973,+0.254,0.00093
+"reference: PBL only",1,0.43067,0.43205,+0.321,0.00625
+"reference: PBL only",2,0.37229,0.37318,+0.240,0.00498
+"reference: PBL only",3,0.34468,0.34545,+0.222,0.00568
+"reference: PBL only",4,0.32568,0.32629,+0.185,0.00445
+"reference: PBL only",5,0.30877,0.30934,+0.185,0.00436
+"reference: PBL only",6,0.29143,0.29216,+0.248,0.00668
+"reference: PBL only",7,0.27326,0.27372,+0.170,0.00390
+"reference: PBL only",8,0.25679,0.25721,+0.165,0.00370
+"reference: PBL only",9,0.24443,0.24495,+0.213,0.00496
+"reference: PBL only",10,0.23466,0.23504,+0.162,0.00353
+"reference: PBL only",11,0.22469,0.22505,+0.162,0.00318
+"reference: PBL only",12,0.21569,0.21612,+0.198,0.00506
+"reference: PBL only",13,0.20824,0.20855,+0.150,0.00308
+"reference: PBL only",14,0.20155,0.20184,+0.139,0.00283
+"reference: PBL only",15,0.19650,0.19678,+0.143,0.00292
+"reference: PBL only",16,0.19246,0.19271,+0.134,0.00268
+"reference: PBL only",17,0.18834,0.18856,+0.117,0.00192
+"reference: PBL only",18,0.18416,0.18440,+0.132,0.00246
+"reference: PBL only",19,0.18074,0.18090,+0.092,0.00087
+"reference: PBL only",20,0.17803,0.17819,+0.087,0.00081
+"reference: PBL only",21,0.17601,0.17617,+0.089,0.00120
+"reference: PBL only",22,0.17438,0.17453,+0.085,0.00086
+"reference: PBL only",23,0.17303,0.17318,+0.084,0.00084
+"reference: PBL only",24,0.17178,0.17192,+0.084,0.00090

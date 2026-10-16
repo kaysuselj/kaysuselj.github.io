@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GCHP 14.7.0 vs AtmosTransport, process by process (C90, 1 Dec 2021)</title>
+<style>
+  .viz-root { --surface-1:#fcfcfb; --text-primary:#0b0b0b; --text-secondary:#52514e; --rule:#e4e3df; }
+  body { margin:0; background:var(--surface-1); color:var(--text-primary);
+         font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:1100px; margin:0 auto; padding:24px; }
+  h1 { font-size:1.5rem; margin:0 0 4px; } h2 { font-size:1.15rem; margin:36px 0 8px; }
+  h3 { font-size:1rem; margin:18px 0 6px; }
+  .meta, figcaption, .note { color:var(--text-secondary); }
+  figure { margin:16px 0 28px; } figure img { width:100%; height:auto; border:1px solid var(--rule); }
+  table { border-collapse:collapse; font-variant-numeric:tabular-nums; margin:8px 0 16px; font-size:0.95em; }
+  th, td { padding:5px 9px; border-bottom:1px solid var(--rule); text-align:left; vertical-align:top; }
+  th { color:var(--text-secondary); font-weight:600; }
+  ul { padding-left:20px; } li { margin:4px 0; } code { font-size:0.9em; }
+  pre { background:#f2f1ed; padding:10px 12px; overflow-x:auto; font-size:0.85em; border:1px solid var(--rule); }
+  a { color:#256abf; }
+  .box { border-left:3px solid #256abf; padding:4px 12px; margin:12px 0; background:#f4f8fd; }
+  .ok { color:#1f7a4f; font-weight:600; } .warn { color:#a86a00; font-weight:600; }
+</style>
+</head>
+<body class="viz-root">
+<main>
+<p class="meta"><a href="../../">AtmosTransport</a> › forward comparison</p>
+<h1>GCHP 14.7.0 vs AtmosTransport, process by process</h1>
+<p class="meta">GEOS-IT meteorology · C90 cubed sphere, native L72 · 2021-12-01 00–24 UTC · both models at 240 s ·
+page generated 2026-10-16 01:05 UTC (each figure carries its own "Made" time) ·
+details of the PBL changes: <a href="../pblonly_c90_20211201_matched/">matching the PBL scheme step by step</a></p>
+
+<div class="box"><b>In short.</b>
+<ul>
+<li><b>Null run</b> (nothing on): exposed a bug in GCHP 14.7.0. With transport off it does not conserve tracer mass (an
+inverted condition in <code>AirQnt</code>). With the one-character fix the models agree to 1e-4.</li>
+<li><b>Full PBL mixing:</b> perfect agreement (lowest-layer fraction identical to 5 digits, cell RMS 5e-5).</li>
+<li><b>Non-local PBL</b> (GCHP's default): close agreement after four AtmosTransport changes. A +0.3 % offset remains
+early in the day, fading to +0.08 % at 24 h. Inputs and their timing are ruled out, so it lies in the implementation
+of the scheme; investigation ongoing.</li>
+<li><b>PBL + convection:</b> GCHP uses the Grell–Freitas convective transport for GEOS-IT; AtmosTransport had ported the
+RAS form. With the Grell–Freitas form and convection every 240 s, as GCHP does it, the agreement equals the PBL-only case.</li>
+</ul></div>
+
+<h2>The experiment and why we do it</h2>
+<ul>
+  <li><b>Question:</b> given identical meteorology, grid and initial tracer, do AtmosTransport and GCHP move a surface
+      tracer the same way? We switch on one process at a time, so each difference can be traced to its cause before
+      processes are combined.</li>
+  <li><b>Initial condition and period:</b> a CO2 tracer of 1 mol/mol (dry) in the lowest model layer and 0 above,
+      everywhere, at 2021-12-01 00 UTC; 24 hours, output every hour.</li>
+  <li><b>Common setup:</b> GEOS-IT met (GCHP regrids C180 to C90 itself; AtmosTransport reads a C90 binary preprocessed
+      from the same files), all 72 levels, 240 s steps in both models. Chemistry, emissions and deposition are off.</li>
+  <li><b>Measures</b> (lowest model layer):
+    <ul>
+      <li>the global fraction of tracer still in the lowest layer, as AtmosTransport relative to GCHP; zero means the
+          same net vertical mixing;</li>
+      <li>the cell-by-cell RMS difference of the CO2 mixing ratio; it shows local differences that the global number can hide.</li>
+    </ul></li>
+  <li><b>Agreement</b> looks like a fraction offset near 0 and a cell RMS at the level of the null run (~1e-4).</li>
+</ul>
+
+<h2>All comparisons</h2>
+<table>
+<tr><th>#</th><th>Processes on</th><th>GCHP</th><th>AtmosTransport</th><th>Question</th><th>Result</th></tr>
+<tr><td>1</td><td>none (null)</td><td>14.7.0, then with the AirQnt fix</td><td>nothing on</td><td>Does anything change when nothing moves the tracer?</td>
+    <td><span class="ok">Matches with the fix</span> (RMS 1.2e-4). 14.7.0 has a mass-conservation bug with transport off</td></tr>
+<tr><td>2</td><td>full PBL mixing (TURBDAY)</td><td><code>use_non_local_pbl: false</code></td><td>new kind <code>geoschem_full_pbl_mixing</code></td><td>Same PBL height, layer heights, air mass?</td>
+    <td><span class="ok">Perfect</span> (fraction 0.000 %, RMS 5e-5)</td></tr>
+<tr><td>3</td><td>non-local PBL (VDIFF)</td><td>default scheme</td><td>four changes (<a href="../pblonly_c90_20211201_matched/">details</a>)</td><td>Does the default PBL scheme agree?</td>
+    <td><span class="warn">Close:</span> +0.32 % at 1 h, +0.20 % at 12 h, +0.08 % at 24 h; RMS 0.006 → 0.001</td></tr>
+<tr><td>4</td><td>non-local PBL + convection</td><td>convection on (Grell–Freitas for GEOS-IT)</td><td>RAS or Grell–Freitas form; convection hourly or every 240 s</td><td>Does convection agree?</td>
+    <td><span class="ok">Matches with the Grell–Freitas form, convection every 240 s</span> (RMS equal to #3); extra offset +0.1–0.2 %</td></tr>
+</table>
+<p class="note">Earlier diagnostic runs, not shown here:
+<ul>
+  <li>GCHP's met fields every 20 min, to see when GCHP updates temperature, winds and convective mass fluxes;</li>
+  <li>a convection-only run. It isolated the scheme difference but is not a realistic setup, because convection rarely
+      reaches the surface.</li>
+</ul></p>
+
+<h2>1. Null run: a mass-conservation bug in GCHP 14.7.0</h2>
+<ul>
+  <li><b>Why:</b> with every process off, nothing should change. Any difference shows how each model's bookkeeping
+      handles the air mass changing from hour to hour, which the meteorology does even with transport off.</li>
+  <li><b>Finding:</b> GCHP held the mixing ratio fixed (exactly 1.0000 everywhere), so tracer mass rose and fell with the air
+      (±0.7 % per cell over the day). AtmosTransport held the tracer mass fixed.</li>
+  <li><b>Cause:</b> GCHP is meant to conserve species mass here. With transport off, <code>gchp_chunk_mod.F90</code> sets
+      <code>scaleMR = .TRUE.</code> so that <code>AirQnt</code> rescales the mixing ratio by
+      <code>DELP_DRY_prev / DELP_DRY</code>. But in <code>calc_met_mod.F90</code> the rescale is guarded by
+      <code>ABS(SUM(DP_DRY_PREV) − SUM(DELP_DRY)) &lt; 1d-14</code>, so it only runs when nothing changed. The commit that
+      introduced it says "only update mixing ratio if delta pressure changed", so the comparison should be <code>&gt;</code>.</li>
+  <li><b>Confirmed:</b>
+    <ul>
+      <li>repeat runs are bit-identical;</li>
+      <li><code>DELP_DRY</code> changes every hour;</li>
+      <li>with <code>&gt;</code>, GCHP conserves tracer mass per cell to 2e-7 and matches AtmosTransport to RMS 1.2e-4
+          (the small initial air-mass difference);</li>
+      <li>a run with advection on is byte-identical with and without the fix.</li>
+    </ul>
+      All GCHP results below use the fixed build, unless labelled "as released".</li>
+</ul>
+<figure><img src="img/null_rms.png" alt="Null run RMS">
+<figcaption>Null run: cell RMS difference of the lowest-layer mixing ratio. With GCHP 14.7.0 the difference grows with the
+air-mass changes; with the fix it stays at 1.2e-4. The lowest-layer fraction is 1 in both models, so it is not shown.</figcaption></figure>
+
+<h2>2. Full PBL mixing (GEOS-Chem TURBDAY)</h2>
+<ul>
+  <li><b>Why:</b> GEOS-Chem's simpler PBL option makes everything below the PBL top uniform at every step (dry-air weighted,
+      with the top layer mixed in proportion to the part below the PBL top). It uses only the PBL height, the layer heights
+      and the air mass, with no stability closure. If the two models agree here, those inputs are consistent, and any
+      difference in the non-local scheme must come from the scheme itself.</li>
+  <li><b>AtmosTransport:</b> new diffusion kind <code>geoschem_full_pbl_mixing</code>, a port of GEOS-Chem's
+      <code>Compute_Pbl_Height</code> and <code>TurbDay</code>. Box heights are hypsometric with virtual temperature, as
+      in GEOS-Chem's <code>AirQnt</code>. Applied every 240 s, as GCHP does. This matters: when the PBL top falls inside a
+      layer, every call mixes that layer a little further.</li>
+  <li><b>GCHP:</b> <code>use_non_local_pbl: false</code>.</li>
+</ul>
+<figure><img src="img/fullpbl_fraction.png" alt="Full mixing fraction"><figcaption>Fraction of tracer in the lowest layer: identical
+within 0.001 % with the fixed GCHP. The small drift with GCHP as released is the AirQnt bug.</figcaption></figure>
+<figure><img src="img/fullpbl_rms.png" alt="Full mixing RMS"><figcaption>Cell RMS difference: 5e-5 to 7e-5 throughout with the fixed
+GCHP.</figcaption></figure>
+
+<h2>3. Non-local PBL (GEOS-Chem VDIFF, GCHP's default)</h2>
+<ul>
+  <li><b>Why:</b> this is the scheme GCHP normally uses.
+      <a href="../pblonly_c90_20211201_matched/">The step-by-step page</a> describes the four AtmosTransport changes that
+      were needed:
+      <ul>
+        <li>GEOS-Chem's dry air per layer;</li>
+        <li>the matching column geometry inside the scheme;</li>
+        <li>a 240 s step;</li>
+        <li>the scheme's temperature interpolated in time.</li>
+      </ul></li>
+  <li><b>Result with the fixed GCHP:</b> the fraction offset is +0.32 % at 1 h, +0.20 % at 12 h and +0.08 % at 24 h. The cell
+      RMS falls from 0.006 to 0.001. The fix removed the late-day part of the earlier offset.</li>
+  <li><b>What remains:</b> full mixing (section 2) agrees perfectly, so the PBL height, layer geometry and air mass are
+      ruled out. The early offset comes from inside the non-local calculation.</li>
+  <li><b>Temperature timing ruled out:</b> AtmosTransport normally updates the scheme's temperature once per hour, and
+      GCHP every 240 s. An experiment that updated AtmosTransport's temperature every 240 s (linear in time, as GCHP)
+      moved the offset by only ±0.03 percentage points (1 h: +0.32 → +0.33 %; 12 h: +0.20 → +0.17 %; 24 h: +0.08 →
+      +0.10 %). A control run that refreshed every step with the temperature held fixed was bit-identical to the default,
+      which confirms the experiment's code path.</li>
+  <li><b>Next:</b> a single-column comparison of AtmosTransport's port with GEOS-Chem's <code>vdiff_mod.F90</code>
+      (Richardson-number closure above the PBL, choice of the PBL-top level, mid-layer heights, tridiagonal solver).</li>
+</ul>
+<figure><img src="img/nonlocal_fraction.png" alt="Non-local fraction"><figcaption>Fraction of tracer in the lowest layer, AtmosTransport
+relative to GCHP: GCHP 14.7.0 as released and with the AirQnt fix.</figcaption></figure>
+<figure><img src="img/nonlocal_rms.png" alt="Non-local RMS"><figcaption>Cell RMS difference of the lowest-layer CO2.</figcaption></figure>
+
+<h2>4. Non-local PBL + convection</h2>
+<ul>
+  <li><b>Why:</b> convection is the next process; it lifts tracer from the boundary layer to the free troposphere.</li>
+  <li><b>Both models use the archived GEOS convective mass fluxes</b> (<code>CMFMC</code>, <code>DTRAIN</code>), held over each
+      3-hour block. A GCHP diagnostic confirmed the same timing in both models. Both use the same updraft,
+      detrainment and subsidence update.</li>
+  <li><b>Difference 1, the routine:</b> GEOS-Chem picks its routine by met source (<code>input_mod.F90</code>):
+    <ul>
+      <li><b>Grell–Freitas form</b> for GEOS-IT and GEOS-FP from June 2020: no special treatment below the cloud base;</li>
+      <li><b>RAS form</b> for MERRA-2 and older GEOS-FP: all layers below the cloud base are mixed into the updraft.</li>
+    </ul>
+      AtmosTransport had ported the RAS form. On this day about 15 % of convective columns have the cloud base well above
+      the surface, and there the RAS form emptied the surface layer, which GCHP leaves alone. New AtmosTransport option:
+      <code>cmfmc_form = "grell_freitas"</code>.</li>
+  <li><b>Difference 2, the timing:</b> by default AtmosTransport runs convection once per hour, as one 3600 s step at the end of
+      the window. GCHP runs it every 240 s, before each PBL step. AtmosTransport setting:
+      <code>[run] physics_cadence = "substep"</code>.</li>
+  <li><b>Result:</b> with both changes, the cell RMS equals the PBL-only comparison (0.006 → 0.001). The fraction offset is
+      +0.40 % at 1 h, +0.37 % at 12 h and +0.22 % at 24 h, about 0.1–0.2 % more than PBL-only. Two known small differences
+      both push AtmosTransport that way:
+    <ul>
+      <li>within each step, AtmosTransport runs PBL then convection; GCHP runs convection then PBL;</li>
+      <li>AtmosTransport converts the mass fluxes to dry air, which makes them 0.3–2 % weaker than GCHP's moist fluxes.</li>
+    </ul></li>
+</ul>
+<figure><img src="img/pblconv_fraction.png" alt="PBL+convection fraction"><figcaption>Fraction of tracer in the lowest layer, AtmosTransport
+relative to GCHP. Grey: RAS form, convection hourly (AtmosTransport's default). Blue: Grell–Freitas form, hourly.
+Orange: Grell–Freitas form every 240 s, as GCHP. Green: PBL only, for reference.</figcaption></figure>
+<figure><img src="img/pblconv_rms.png" alt="PBL+convection RMS"><figcaption>Cell RMS difference. The RAS form peaks in the first hour of
+each 3-hour convective-flux block (hours 1, 4, 7, 10), when new convection draws on surface-rich columns. With the
+Grell–Freitas form every 240 s (orange), the curve lies on the PBL-only reference (green).</figcaption></figure>
+<h3>Final PBL + convection run (Grell–Freitas form, every 240 s, fixed GCHP)</h3>
+<figure><img src="img/final/fig3_surface_layer.png" alt="Fraction, both models"><figcaption>Fraction of tracer left in the lowest layer
+in both models, and the relative difference.</figcaption></figure>
+<figure><img src="img/final/fig4_maps.png" alt="Maps"><figcaption>Lowest-layer CO2 at 03 and 24 UTC and the difference AtmosTransport − GCHP.</figcaption></figure>
+<figure><img src="img/final/fig1_profiles.png" alt="Profiles"><figcaption>Global mean CO2 profiles at selected hours.</figcaption></figure>
+<figure><img src="img/final/fig2_time_height.png" alt="Time-height"><figcaption>Global mean CO2 against altitude and time, and the difference.</figcaption></figure>
+
+<h2>Settings that make AtmosTransport match GCHP (GEOS-IT)</h2>
+<pre># preprocessing (binary)
+[source]
+dry_mass_layers        = "geoschem_hybrid"   # GEOS-Chem dry air per layer
+vdiff_temperature_time = "window_midpoint"   # PBL temperature interpolated in time
+[numerics]
+min_steps_per_window   = 15                  # 240 s steps
+max_steps_per_window   = 15
+[mass_fix]
+enable                 = false               # GCHP has no global dry-mass pin
+
+# run
+[diffusion]
+kind = "geoschem_nonlocal_vdiff"             # or "geoschem_full_pbl_mixing" (GCHP use_non_local_pbl: false)
+[convection]
+kind       = "cmfmc"
+cmfmc_form = "grell_freitas"                 # GEOS-Chem's routine for GEOS-IT
+[run]
+physics_cadence = "substep"                  # convection every 240 s, as GCHP</pre>
+<p class="note">The new options are on local AtmosTransport branches and are not yet on GitHub. GCHP was built with the one-line
+<code>AirQnt</code> fix, which has not yet been reported upstream.</p>
+<p>Numbers: <a href="null_table.csv">null</a>, <a href="fullpbl_table.csv">full mixing</a>,
+<a href="nonlocal_table.csv">non-local PBL</a>, <a href="pblconv_table.csv">PBL + convection</a> (per hour, all variants).</p>
+<p class="meta">Scripts: <code>compare_pblonly.jl</code>, <code>plot_pblonly_stages.py</code>, <code>plot_pblonly.py</code>,
+<code>check_null_airqnt.py</code>. Page generated 2026-10-16 01:05 UTC.</p>
+</main>
+</body>
+</html>

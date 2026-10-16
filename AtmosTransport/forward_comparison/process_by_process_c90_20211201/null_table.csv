@@ -1,0 +1,50 @@
+# made 2026-10-16 00:26 UTC
+stage,hour_utc,frac_lowest_gchp,frac_lowest_at,rel_diff_percent,cell_rms_lowest_vmr
+"GCHP 14.7.0 as released",1,1.00000,1.00000,+0.000,0.00059
+"GCHP 14.7.0 as released",2,1.00000,1.00000,+0.000,0.00115
+"GCHP 14.7.0 as released",3,1.00000,1.00000,+0.000,0.00169
+"GCHP 14.7.0 as released",4,1.00000,1.00000,+0.000,0.00220
+"GCHP 14.7.0 as released",5,1.00000,1.00000,+0.000,0.00265
+"GCHP 14.7.0 as released",6,1.00000,1.00000,+0.000,0.00303
+"GCHP 14.7.0 as released",7,1.00000,1.00000,+0.000,0.00333
+"GCHP 14.7.0 as released",8,1.00000,1.00000,+0.000,0.00358
+"GCHP 14.7.0 as released",9,1.00000,1.00000,+0.000,0.00381
+"GCHP 14.7.0 as released",10,1.00000,1.00000,+0.000,0.00406
+"GCHP 14.7.0 as released",11,1.00000,1.00000,+0.000,0.00434
+"GCHP 14.7.0 as released",12,1.00000,1.00000,+0.000,0.00464
+"GCHP 14.7.0 as released",13,1.00000,1.00000,+0.000,0.00494
+"GCHP 14.7.0 as released",14,1.00000,1.00000,+0.000,0.00524
+"GCHP 14.7.0 as released",15,1.00000,1.00000,+0.000,0.00552
+"GCHP 14.7.0 as released",16,1.00000,1.00000,+0.000,0.00579
+"GCHP 14.7.0 as released",17,1.00000,1.00000,+0.000,0.00605
+"GCHP 14.7.0 as released",18,1.00000,1.00000,+0.000,0.00629
+"GCHP 14.7.0 as released",19,1.00000,1.00000,+0.000,0.00650
+"GCHP 14.7.0 as released",20,1.00000,1.00000,+0.000,0.00669
+"GCHP 14.7.0 as released",21,1.00000,1.00000,+0.000,0.00686
+"GCHP 14.7.0 as released",22,1.00000,1.00000,+0.000,0.00703
+"GCHP 14.7.0 as released",23,1.00000,1.00000,+0.000,0.00720
+"GCHP 14.7.0 as released",24,1.00000,1.00000,+0.000,0.00738
+"GCHP with the AirQnt fix",1,1.00000,1.00000,+0.000,0.00012
+"GCHP with the AirQnt fix",2,1.00000,1.00000,+0.000,0.00012
+"GCHP with the AirQnt fix",3,1.00000,1.00000,-0.000,0.00013
+"GCHP with the AirQnt fix",4,1.00000,1.00000,+0.000,0.00013
+"GCHP with the AirQnt fix",5,1.00000,1.00000,+0.000,0.00013
+"GCHP with the AirQnt fix",6,1.00000,1.00000,+0.000,0.00012
+"GCHP with the AirQnt fix",7,1.00000,1.00000,+0.000,0.00012
+"GCHP with the AirQnt fix",8,1.00000,1.00000,+0.000,0.00012
+"GCHP with the AirQnt fix",9,1.00000,1.00000,+0.000,0.00013
+"GCHP with the AirQnt fix",10,1.00000,1.00000,+0.000,0.00013
+"GCHP with the AirQnt fix",11,1.00000,1.00000,+0.000,0.00014
+"GCHP with the AirQnt fix",12,1.00000,1.00000,+0.000,0.00013
+"GCHP with the AirQnt fix",13,1.00000,1.00000,+0.000,0.00012
+"GCHP with the AirQnt fix",14,1.00000,1.00000,+0.000,0.00012
+"GCHP with the AirQnt fix",15,1.00000,1.00000,+0.000,0.00012
+"GCHP with the AirQnt fix",16,1.00000,1.00000,+0.000,0.00013
+"GCHP with the AirQnt fix",17,1.00000,1.00000,+0.000,0.00013
+"GCHP with the AirQnt fix",18,1.00000,1.00000,+0.000,0.00013
+"GCHP with the AirQnt fix",19,1.00000,1.00000,+0.000,0.00012
+"GCHP with the AirQnt fix",20,1.00000,1.00000,+0.000,0.00012
+"GCHP with the AirQnt fix",21,1.00000,1.00000,+0.000,0.00013
+"GCHP with the AirQnt fix",22,1.00000,1.00000,+0.000,0.00012
+"GCHP with the AirQnt fix",23,1.00000,1.00000,+0.000,0.00012
+"GCHP with the AirQnt fix",24,1.00000,1.00000,+0.000,0.00013

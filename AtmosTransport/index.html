@@ -6,7 +6,10 @@
 testing one transport process at a time on identical meteorology, grid and initial conditions.</p>
 <h2>Forward comparisons</h2>
 <ul>
-<li><b>Latest:</b> <a href="forward_comparison/pblonly_c90_20211201_matched/">Boundary-layer mixing only: matching AtmosTransport to GCHP, step by step</a>:
+<li><b>Latest:</b> <a href="forward_comparison/process_by_process_c90_20211201/">GCHP vs AtmosTransport, process by process</a>:
+null run (a GCHP 14.7.0 mass-conservation bug with transport off), full PBL mixing (perfect agreement), non-local PBL, and PBL + convection
+(Grell–Freitas form, convection every 240 s).</li>
+<li><a href="forward_comparison/pblonly_c90_20211201_matched/">Boundary-layer mixing only: matching AtmosTransport to GCHP, step by step</a>:
 which changes AtmosTransport needed to mix like GCHP 14.7.0, and how much each one closed the gap (cell-by-cell difference 3–5× smaller, lowest-layer fraction within 0.15–0.3 %).</li>
 <li><a href="forward_comparison/pblonly_c90_20211201/">Boundary-layer mixing only</a>: GCHP 14.7.0 vs AtmosTransport,
 GEOS-IT, C90 L72, 1 Dec 2021. Surface-layer CO2 tracer, non-local PBL scheme.</li>

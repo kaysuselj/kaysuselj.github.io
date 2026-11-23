@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AT Adjoint Ladder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+/* Layout: one reading column (~70ch) for prose; tables and the support matrix may run wider, each in its own scroller. */
+:root {
+  --bg: #f7f8fa; --surface: #ffffff; --fg: #1c2330; --muted: #5a6475; --line: #d9dee6; --accent: #2f5d8a;
+  --ok: #1f7a4d; --ok-bg: #e3f3ea; --unit: #2f5d8a; --unit-bg: #e4ecf6; --open: #8a5a00; --open-bg: #fbf0d9;
+  --no: #9b2c2c; --no-bg: #f7e3e3; --na: #6b7280; --na-bg: #eceef1;
+  --f-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11151c; --surface: #171c25; --fg: #e3e7ee; --muted: #9aa4b5; --line: #2b3342; --accent: #8fb6e0;
+  --ok: #6fd3a0; --ok-bg: #173327; --unit: #8fb6e0; --unit-bg: #1b2a3d; --open: #e8bd6a; --open-bg: #33280f;
+  --no: #f09a9a; --no-bg: #3a1c1c; --na: #a0a7b3; --na-bg: #232933; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11151c; --surface: #171c25; --fg: #e3e7ee; --muted: #9aa4b5; --line: #2b3342; --accent: #8fb6e0;
+  --ok: #6fd3a0; --ok-bg: #173327; --unit: #8fb6e0; --unit-bg: #1b2a3d; --open: #e8bd6a; --open-bg: #33280f;
+  --no: #f09a9a; --no-bg: #3a1c1c; --na: #a0a7b3; --na-bg: #232933; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 2rem 4rem; }
+main { max-width: 1060px; margin: 0 auto; display: flex; flex-direction: column; gap: 2.5rem; }
+.prose { max-width: 72ch; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: 2rem; } h2 { font-size: 1.45rem; } h3 { font-size: 1.1rem; }
+p { margin: 0; } section { display: flex; flex-direction: column; gap: 1rem; }
+.meta { font-family: var(--f-mono); font-size: 0.78rem; color: var(--muted); }
+.eyebrow { font-family: var(--f-mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+a { color: var(--accent); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; font-size: 0.85rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.chip { display: inline-block; font-family: var(--f-mono); font-size: 0.72rem; font-weight: 500; padding: 0.08rem 0.45rem; border-radius: 3px; white-space: nowrap; }
+.ok { color: var(--ok); background: var(--ok-bg); } .unit { color: var(--unit); background: var(--unit-bg); }
+.open { color: var(--open); background: var(--open-bg); } .no { color: var(--no); background: var(--no-bg); } .na { color: var(--na); background: var(--na-bg); }
+.scroll { overflow-x: auto; border: 1px solid var(--line); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.86rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--muted); font-size: 0.78rem; letter-spacing: 0.02em; background: var(--bg); position: sticky; top: 0; }
+tr.group td { background: var(--bg); font-family: var(--f-mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); padding-top: 0.8rem; }
+td.num { text-align: right; font-family: var(--f-mono); font-size: 0.82rem; }
+th.num { text-align: right; }
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; font-family: var(--f-mono); font-size: 0.8rem; }
+.flow .op { border: 1px solid var(--line); background: var(--surface); padding: 0.25rem 0.55rem; border-radius: 3px; }
+.flow .arrow { color: var(--muted); }
+.flow .mid { border-color: var(--accent); }
+.callout { border-left: 3px solid var(--accent); background: var(--surface); padding: 0.8rem 1rem; max-width: 80ch; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+.card { background: var(--surface); border: 1px solid var(--line); padding: 0.9rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+.card h3 { font-size: 1rem; }
+.card ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.9rem; }
+figure { margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+figure img { background: #fff; border: 1px solid var(--line); }
+figcaption { font-size: 0.86rem; color: var(--muted); max-width: 90ch; }
+details summary { cursor: pointer; color: var(--accent); font-size: 0.9rem; }
+details[open] summary { margin-bottom: 0.6rem; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 520px) { h1 { font-size: 1.6rem; } body { font-size: 14px; } }
+</style>
+
+</head>
+<body>
+<main>
+<header style="display:flex;flex-direction:column;gap:0.6rem">
+  <p class="meta"><a href="../../../">Home</a> › <a href="../../">AtmosTransport</a> › Adjoint tests</p>
+  <div class="eyebrow">AtmosTransport.jl · CO₂ adjoint and 4D-Var</div>
+  <h1>AT Adjoint Ladder</h1>
+  <p class="prose">Which adjoints <a href="https://github.com/RemoteSensingTools/AtmosTransport.jl">AtmosTransport.jl</a> (AT) can compute, which of them we have verified, and the first verification step (A1: boundary-layer mixing alone), on the way to a CO₂ 4D-Var flux inversion with AT.</p>
+  <p class="meta">Page generated 2026-11-23 20:35 UTC · AT origin/main 78210a013, unmodified · figures carry their own "Made:" time</p>
+</header>
+
+<!-- ============================================================ PART 1 -->
+<section id="support">
+  <div class="eyebrow">Part 1</div>
+  <h2>Which adjoints AT supports</h2>
+  <p class="prose">AT ships a <strong>discrete</strong> adjoint only: the reverse pass replays the production step and transposes each operator, with the branches of limited schemes recorded on the tape. There is no continuous (reversed-wind, CONT) advection adjoint. Adjoints exist on the <strong>cubed sphere only</strong>. A configuration that uses an operator without an adjoint is rejected before the run, with the operator named (<code>require_adjoint_support</code>); nothing is silently approximated. Source: <code>src/Adjoints/AdjointSupport.jl</code>, <code>src/Adjoints/Adjoints.jl</code>, <code>docs/src/theory/adjoint_status.md</code>.</p>
+
+  <div class="legend">
+    <span><span class="chip ok">verified here</span> passed our ladder test</span>
+    <span><span class="chip unit">AT tests only</span> adjoint exists, tested by AT on small synthetic cases</span>
+    <span><span class="chip open">exists, not in our data</span> adjoint exists, but our MERRA-2 binaries lack its inputs</span>
+    <span><span class="chip no">no adjoint</span> rejected by AT</span>
+  </div>
+
+  <h3>One model step, forward and reverse</h3>
+  <div class="flow" aria-label="Order of operators in one step">
+    <span class="op">X</span><span class="arrow">→</span><span class="op">Y</span><span class="arrow">→</span><span class="op">Z</span><span class="arrow">→</span>
+    <span class="op mid">surface flux + PBL mixing</span><span class="arrow">→</span>
+    <span class="op">Z</span><span class="arrow">→</span><span class="op">Y</span><span class="arrow">→</span><span class="op">X</span><span class="arrow">→</span>
+    <span class="op">convection (once per met window)</span><span class="arrow">→</span><span class="op">air-mass reset</span>
+  </div>
+  <p class="prose" style="font-size:0.9rem;color:var(--muted)">Strang palindrome; convection after the advection, GCHP-style, at <code>physics_cadence = :window</code>. The adjoint walks the same sequence backwards. Each tape record holds the air mass entering the operator (and one byte of limiter branches per cell for limited PPM).</p>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Component</th><th>Option (TOML)</th><th>Adjoint</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr class="group"><td colspan="4">Grid</td></tr>
+      <tr><td>Cubed sphere</td><td>gnomonic, GEOS-native panels</td><td><span class="chip unit">AT tests only</span></td><td>All of the adjoint stack. Halo and corner exchange have exact transposes.</td></tr>
+      <tr><td>Lat-lon, reduced Gaussian</td><td></td><td><span class="chip no">no adjoint</span></td><td>Forward only.</td></tr>
+
+      <tr class="group"><td colspan="4">Advection (<code>[advection]</code>)</td></tr>
+      <tr><td>Upwind</td><td><code>scheme = "upwind"</code></td><td><span class="chip unit">AT tests only</span></td><td>Linear. With zero fluxes it is our "advection off" (A1, A2).</td></tr>
+      <tr><td>Slopes, unlimited</td><td><code>"slopes"</code>, no limiter</td><td><span class="chip unit">AT tests only</span></td><td>Linear: candidate for the B4 dot-product test.</td></tr>
+      <tr><td>Slopes, limited</td><td><code>"slopes"</code> + limiter</td><td><span class="chip no">no adjoint</span></td><td></td></tr>
+      <tr><td>PPM, unlimited</td><td><code>"ppm"</code>, <code>limiter = "none"</code></td><td><span class="chip unit">AT tests only</span></td><td>Linear; accepted only by the inversion driver. B4 candidate.</td></tr>
+      <tr><td>PPM, monotone / CW84</td><td><code>"ppm"</code>, <code>"monotone"</code> | <code>"cw84"</code></td><td><span class="chip unit">AT tests only</span></td><td>Limiter branches recorded: the exact derivative at the forward state (DISC). B3 epsilon sweep.</td></tr>
+      <tr><td>PPM with FV3 vertical</td><td><code>"ppm"</code>, <code>vertical = "fv3_kord8"</code></td><td><span class="chip no">no adjoint</span></td><td>Split-sweep PPM horizontally plus FV3 vertical has no record.</td></tr>
+      <tr><td>Lin–Rood ORD 5</td><td><code>"linrood"</code>, upwind or <code>fv3_kord8</code> vertical</td><td><span class="chip unit">AT tests only</span></td><td>Closest to GCHP. Tape must stay on the device: a C48 month fits one 46 GB GPU, C90 about 11 days.</td></tr>
+      <tr><td>Lin–Rood ORD 7</td><td>same</td><td><span class="chip unit">AT tests only</span></td><td>Marked preview by AT.</td></tr>
+      <tr><td>No advection</td><td><code>scheme = "none"</code></td><td><span class="chip no">no adjoint</span></td><td>Workaround: upwind with zero fluxes.</td></tr>
+      <tr><td>Reversed-wind (CONT)</td><td></td><td><span class="chip no">no adjoint</span></td><td>Not implemented in AT. Would have to be built for a CONT vs DISC comparison.</td></tr>
+
+      <tr class="group"><td colspan="4">PBL mixing (<code>[diffusion] kind</code>)</td></tr>
+      <tr><td>Holtslag–Boville local Kz</td><td><code>"geoschem_holtslag_boville_vdiff"</code></td><td><span class="chip ok">verified here</span></td><td>A1, 1 day, F32/F64 on CPU/GPU (Part 2). Kz from the meteorology, so the operator is linear in CO₂.</td></tr>
+      <tr><td>Beljaars–Viterbo local Kz</td><td><code>"tm5_beljaars_viterbo_local_kz"</code></td><td><span class="chip unit">AT tests only</span></td><td>Needs pblh, u*, heat flux, T2m: present in our binaries.</td></tr>
+      <tr><td>Constant Kz</td><td><code>"constant"</code></td><td><span class="chip unit">AT tests only</span></td><td>Useful as a simple reference.</td></tr>
+      <tr><td>TM5 Dkg exchange</td><td><code>"tm5_dkg"</code></td><td><span class="chip open">exists, not in our data</span></td><td>Needs a binary built with <code>include_tm5_diffusion</code>.</td></tr>
+      <tr><td>TM5 Calc_Kzz</td><td><code>"tm5_calc_kzz"</code></td><td><span class="chip open">exists, not in our data</span></td><td>Frozen-D adjoint. Needs the v5 TM5 PBL inputs.</td></tr>
+      <tr><td>GEOS-Chem non-local PBL</td><td><code>"geoschem_nonlocal_vdiff"</code></td><td><span class="chip no">no adjoint</span></td><td>The counter-gradient emission profile is not transposed. This is what GCHP uses.</td></tr>
+      <tr><td>Surface-flux coupling</td><td><code>surface_flux_boundary</code> false | true</td><td><span class="chip unit">AT tests only</span></td><td>Both: V/2 → S → V/2, and S(dt) → V(dt).</td></tr>
+
+      <tr class="group"><td colspan="4">Convection (<code>[convection] kind</code>)</td></tr>
+      <tr><td>CMFMC (GCHP-style)</td><td><code>"cmfmc"</code>, <code>cloud_base = "cmfmc"</code>, no clamp</td><td><span class="chip unit">AT tests only</span></td><td>Default options. Transpose identity in F32/F64. Our binaries have CMFMC and DTRAIN.</td></tr>
+      <tr><td>CMFMC with clamp or archived cloud base</td><td><code>clamp = true</code> | <code>cloud_base = "dqrcu"</code></td><td><span class="chip no">no adjoint</span></td><td>The positivity clamp is nonlinear and its branches are not taped.</td></tr>
+      <tr><td>CMFMC matrix (TM5 LU on CMFMC)</td><td><code>"cmfmc_matrix"</code></td><td><span class="chip unit">AT tests only</span></td><td>Only with <code>use_collab_lu = false</code>, <code>lmax_conv = 0</code>, <code>n_merge = 1</code>.</td></tr>
+      <tr><td>TM5 four-field</td><td><code>"tm5"</code></td><td><span class="chip open">exists, not in our data</span></td><td>Same restriction. Needs entu/detu/entd/detd (ERA5 binaries).</td></tr>
+      <tr><td>IFS</td><td><code>"ifs"</code></td><td><span class="chip no">no adjoint</span></td><td>Forward only.</td></tr>
+
+      <tr class="group"><td colspan="4">Other parts of the step</td></tr>
+      <tr><td>Surface flux</td><td>per-step emission rates</td><td><span class="chip unit">AT tests only</span></td><td>Gradient per step, aggregated into user windows (months).</td></tr>
+      <tr><td>Air-mass reset</td><td><code>preserve_tracer_mass</code> | <code>preserve_vmr</code></td><td><span class="chip ok">verified here</span></td><td>Default <code>preserve_tracer_mass</code> was active in A1 (hourly windows).</td></tr>
+      <tr><td>Chemistry</td><td>decay</td><td><span class="chip no">no adjoint</span></td><td>Not needed for CO₂.</td></tr>
+      <tr><td>Physics cadence</td><td><code>:window</code> | <code>:substep</code></td><td><span class="chip unit">AT tests only</span></td><td></td></tr>
+
+      <tr class="group"><td colspan="4">Observations, controls, optimizer</td></tr>
+      <tr><td>Observation operators</td><td>layer, column mean, placed point, averaging-kernel column</td><td><span class="chip unit">AT tests only</span></td><td>Averaging-kernel column matches TM5-4DVAR's Fortran to 1e-13. One reverse pass for all observations.</td></tr>
+      <tr><td>Controls</td><td>surface-flux windows; initial condition</td><td><span class="chip ok">verified here</span></td><td>Initial-condition sensitivity used in A1. Surface-flux gradient: test A3.</td></tr>
+      <tr><td>Covariance, optimizer</td><td>B<sup>1/2</sup>, log-normal transform, gradient descent, L-BFGS</td><td><span class="chip unit">AT tests only</span></td><td>Preview. We may use our own Python L-BFGS-B instead.</td></tr>
+
+      <tr class="group"><td colspan="4">Backends and precision</td></tr>
+      <tr><td>CPU, CUDA</td><td>Float32, Float64</td><td><span class="chip ok">verified here</span></td><td>For the A1 operator. GPU adjoint advection uses atomic adds: not bit-reproducible.</td></tr>
+      <tr><td>Metal, ROCm</td><td></td><td><span class="chip na">not used</span></td><td>Metal has no adjoint yet; ROCm not validated.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>What this means for the ladder</h3>
+  <div class="grid2">
+    <div class="card">
+      <h3>A: column processes (advection off)</h3>
+      <ul>
+        <li><span class="chip ok">done</span> A1 Holtslag–Boville, 1 day</li>
+        <li><span class="chip open">next</span> A1 1 month; A1 with Beljaars–Viterbo and constant Kz</li>
+        <li>A2 + CMFMC (no clamp), + CMFMC matrix</li>
+        <li>A3 with respect to the surface flux</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>B: advection alone</h3>
+      <ul>
+        <li>B4 dot products: upwind, unlimited slopes, unlimited PPM (linear)</li>
+        <li>B3 epsilon sweep: monotone/CW84 PPM, Lin–Rood ORD 5/7</li>
+        <li>B1, B2, B5, B6 with the scheme(s) you choose</li>
+        <li>No CONT adjoint: the CONT/DISC comparison needs new code</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>C, D, E: full model and gradient</h3>
+      <ul>
+        <li>C1: chosen scheme + CMFMC + PBL mixing</li>
+        <li>D1, D2: 4D-Var gradient with the averaging-kernel operator</li>
+        <li>E3 becomes CPU vs GPU (AT runs on one device); E2 is the fixed-order observation injection</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Precision</h3>
+      <ul>
+        <li>Every step in Float32 and Float64, on CPU and GPU</li>
+        <li>Float32 is judged against the Float64 finite difference, because Float32 finite differences are not reliable for small sensitivities (Part 2)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ PART 2 -->
+<section id="a1">
+  <div class="eyebrow">Part 2 · Test A1</div>
+  <h2>PBL mixing alone, 1 day</h2>
+
+  <div class="callout prose" style="display:flex;flex-direction:column;gap:0.6rem">
+    <p><strong>Question.</strong> Is AT's adjoint of boundary-layer mixing the exact transpose of the forward model, and is it accurate enough in Float32, on CPU and on GPU?</p>
+    <p><strong>What is on and off.</strong> Only PBL mixing is on: Holtslag–Boville local Kz, computed from the meteorology. Convection, surface fluxes and chemistry are off. Advection is off: every mass flux is set to zero after AT loads it, with the upwind scheme, because <code>NoAdvection</code> has no adjoint. Each column is then independent, so one run tests all 6 × 90 × 90 = 48 600 columns. The operator is linear in CO₂, so the derivative does not depend on the size of the perturbation.</p>
+    <p><strong>Initial condition and period.</strong> MERRA-2, cubed sphere C90, 72 levels, hourly met windows, 2022-07-01 00 UTC to 07-02 00 UTC. CO₂ 400 ppm everywhere. Forward runs perturb CO₂ by ±50 ppm at one level <i>L</i> per column (random, 1–40 from the surface, seed 1). The adjoint is seeded with 1 at one level <i>r</i> of every column at the end (<i>r</i> = 1, 10, 20, 30 from the surface) and gives dq<sub>end</sub>(<i>r</i>)/dq<sub>0</sub>(<i>L</i>), compared with the central finite difference (FD) of the forward runs.</p>
+    <p><strong>What agreement means.</strong> Float64: |adjoint/FD − 1| at round-off (the GCHP test reached ≤ 1.8e-6). Float32: the error measured against the Float64 FD is the error the 4D-Var gradient would carry from this operator.</p>
+  </div>
+
+  <h3>Result</h3>
+  <ul class="prose" style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.3rem">
+    <li><strong>Float64 passes on CPU and GPU.</strong> Weighted error 2–4e-14, median 2e-14 to 3e-12, 100 % same sign. CPU and GPU adjoints differ by at most 1.8e-11 relative.</li>
+    <li><strong>Float32 adjoint error is about 1e-5</strong> against the Float64 FD: weighted 5e-6 to 3e-5, median 2e-6 to 1e-5, 99th percentile below 1e-3, no sign errors. The error does not grow for small sensitivities. The worst single columns (up to 0.13) have sensitivities near 1e-6.</li>
+    <li><strong>Float32 finite differences are not reliable</strong> for sensitivities below about 1e-3. Each FD subtracts two runs near 450 ppm, so Float32 round-off dominates (rows 3 and 5 of the figure). Use Float64 FD as the reference.</li>
+    <li><strong>The GPU is 8× faster</strong> than 16 CPU threads for the adjoint.</li>
+  </ul>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Setup</th><th>Seed level</th><th class="num">Columns</th><th class="num">Weighted error</th><th class="num">Median</th><th class="num">99th pct</th><th class="num">Max</th><th class="num">Same sign</th></tr></thead>
+    <tbody>
+      <tr class="group"><td colspan="8">Float64, against the Float64 FD of the same run</td></tr>
+      <tr><td>Float64 CPU</td><td class="num">1</td><td class="num">17 299</td><td class="num">1.8e-14</td><td class="num">1.9e-14</td><td class="num">3.9e-10</td><td class="num">3.4e-9</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">10</td><td class="num">19 327</td><td class="num">4.1e-14</td><td class="num">4.6e-14</td><td class="num">1.3e-9</td><td class="num">8.7e-9</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">20</td><td class="num">10 291</td><td class="num">4.4e-14</td><td class="num">2.6e-12</td><td class="num">5.1e-9</td><td class="num">1.9e-8</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">30</td><td class="num">6 949</td><td class="num">2.9e-14</td><td class="num">8.9e-13</td><td class="num">2.9e-9</td><td class="num">1.2e-8</td><td class="num">100 %</td></tr>
+      <tr><td>Float64 GPU</td><td class="num">1</td><td class="num">17 299</td><td class="num">1.8e-14</td><td class="num">1.9e-14</td><td class="num">3.9e-10</td><td class="num">3.4e-9</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">10</td><td class="num">19 327</td><td class="num">4.2e-14</td><td class="num">4.6e-14</td><td class="num">1.3e-9</td><td class="num">8.7e-9</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">20</td><td class="num">10 291</td><td class="num">4.5e-14</td><td class="num">2.6e-12</td><td class="num">5.1e-9</td><td class="num">1.9e-8</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">30</td><td class="num">6 949</td><td class="num">3.1e-14</td><td class="num">9.0e-13</td><td class="num">2.9e-9</td><td class="num">1.2e-8</td><td class="num">100 %</td></tr>
+      <tr class="group"><td colspan="8">Float32 adjoint, against the Float64 CPU FD</td></tr>
+      <tr><td>Float32 CPU</td><td class="num">1</td><td class="num">17 299</td><td class="num">1.9e-5</td><td class="num">1.0e-5</td><td class="num">9.0e-4</td><td class="num">7.0e-2</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">10</td><td class="num">19 327</td><td class="num">2.5e-5</td><td class="num">8.2e-6</td><td class="num">9.1e-4</td><td class="num">1.3e-1</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">20</td><td class="num">10 291</td><td class="num">1.0e-5</td><td class="num">4.8e-6</td><td class="num">8.7e-4</td><td class="num">1.5e-2</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">30</td><td class="num">6 949</td><td class="num">5.1e-6</td><td class="num">2.2e-6</td><td class="num">4.0e-4</td><td class="num">7.1e-3</td><td class="num">100 %</td></tr>
+      <tr><td>Float32 GPU</td><td class="num">1</td><td class="num">17 299</td><td class="num">1.9e-5</td><td class="num">1.0e-5</td><td class="num">8.9e-4</td><td class="num">7.0e-2</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">10</td><td class="num">19 327</td><td class="num">2.8e-5</td><td class="num">8.0e-6</td><td class="num">9.1e-4</td><td class="num">1.3e-1</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">20</td><td class="num">10 291</td><td class="num">1.0e-5</td><td class="num">4.8e-6</td><td class="num">8.7e-4</td><td class="num">1.5e-2</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">30</td><td class="num">6 949</td><td class="num">5.3e-6</td><td class="num">2.2e-6</td><td class="num">4.1e-4</td><td class="num">7.1e-3</td><td class="num">100 %</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="meta">Columns with |FD| &gt; 1e-6. Weighted error = Σ|adj − FD| / Σ|FD|. Other errors are |adj/FD − 1|.</p>
+
+  <h3>Timing</h3>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Setup</th><th>Hardware</th><th class="num">Forward, 1 day (3 tracers)</th><th class="num">Adjoint, 1 day (4 seeds)</th><th class="num">Adjoint per seed</th></tr></thead>
+    <tbody>
+      <tr><td>Float64 CPU</td><td>16 threads</td><td class="num">48 s</td><td class="num">398 s</td><td class="num">≈ 100 s</td></tr>
+      <tr><td>Float32 CPU</td><td>16 threads</td><td class="num">47 s</td><td class="num">272 s</td><td class="num">≈ 68 s</td></tr>
+      <tr><td>Float64 GPU</td><td>NVIDIA L40S (GPU 1)</td><td class="num">40 s</td><td class="num">50 s</td><td class="num">≈ 13 s</td></tr>
+      <tr><td>Float32 GPU</td><td>NVIDIA L40S (GPU 1)</td><td class="num">39 s</td><td class="num">34 s</td><td class="num">≈ 9 s</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="meta">Wall clock, 24 hourly met windows. Includes Julia compilation (about 15–35 s per phase, measured on a 2-window run) and the adjoint's capture of the met inputs, so the per-seed figures are upper bounds.</p>
+
+  <figure>
+    <img src="img/fig_a1_day1_diff.png" alt="Relative error of the adjoint against the finite difference, per column, for four seed levels and six setups" loading="lazy">
+    <figcaption><strong>Relative error |adjoint/FD − 1| against the FD</strong>, one point per column, coloured by the perturbed level <i>L</i>. Rows: (a–h) Float64 CPU and GPU against their own FD; (i–l, q–t) Float32 against its own Float32 FD; (m–p, u–x) Float32 against the Float64 FD. Columns: seed level <i>r</i> = 1, 10, 20, 30. Float64 errors fall from 1e-8 to 1e-16 as the sensitivity grows (round-off of the FD). Float32 against Float64 FD: flat near 1e-5.</figcaption>
+  </figure>
+
+  <details>
+    <summary>Scatter of adjoint against FD</summary>
+    <figure>
+      <img src="img/fig_a1_day1_scatter.png" alt="Adjoint against finite difference for each setup and seed level" loading="lazy">
+      <figcaption>Adjoint against central FD of the same run, one point per column. All points lie on the 1:1 line except the smallest Float32 sensitivities, where the Float32 FD is noise.</figcaption>
+    </figure>
+  </details>
+
+  <p class="meta">Scripts: <code>tests/a1_pbl/a1_pbl.jl</code> (test), <code>tests/a1_pbl/fig_a1_pbl.py</code> (figures, statistics). Data: <code>/temp2/ksuselj/adjoint_exps/a1_pbl/day1_*</code>. Next: the 1-month runs (not started).</p>
+</section>
+</main>
+
+</body>
+</html>

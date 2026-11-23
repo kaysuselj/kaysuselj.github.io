@@ -15,4 +15,10 @@ which changes AtmosTransport needed to mix like GCHP 14.7.0, and how much each o
 GEOS-IT, C90 L72, 1 Dec 2021. Surface-layer CO2 tracer, non-local PBL scheme.</li>
 <li><a href="forward_comparison/pblonly_c90_20211201_gchplike/">Boundary-layer mixing only, matched air mass</a>: the same experiment with AtmosTransport's dry air per layer computed the GEOS-Chem way; removes the 0.65% air-mass offset and halves the mixing difference.</li>
 </ul>
+<h2>Adjoint tests</h2>
+<ul>
+<li><a href="adjoint/a1_pbl_c90_20220701/">Which adjoints AtmosTransport supports, and test A1: boundary-layer mixing alone</a>:
+map of the adjoint options (advection, PBL mixing, convection, observations); adjoint vs finite differences in every column, MERRA-2 C90, 1 Jul 2022, 1 day,
+Float32 and Float64 on CPU and GPU, with timing. Float64 agrees to round-off; Float32 error about 1e-5.</li>
+</ul>
 </main></body></html>

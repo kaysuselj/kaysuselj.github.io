@@ -72,8 +72,8 @@ details[open] summary { margin-bottom: 0.6rem; }
   <p class="meta"><a href="../../../">Home</a> › <a href="../../">AtmosTransport</a> › Adjoint tests</p>
   <div class="eyebrow">AtmosTransport.jl · CO₂ adjoint and 4D-Var</div>
   <h1>AT Adjoint Ladder</h1>
-  <p class="prose">Which adjoints AT can compute, which of them we have verified, and the first verification step (A1: boundary-layer mixing alone). Part of the work towards a CO₂ 4D-Var flux inversion with <a href="https://github.com/RemoteSensingTools/AtmosTransport.jl">AtmosTransport.jl</a>.</p>
-  <p class="meta">Page generated 2026-11-23 21:35 UTC · AT origin/main 78210a013, unmodified · figures carry their own "Made:" time</p>
+  <p class="prose">Which adjoints AT can compute, which of them we have verified, the first verification step (A1: boundary-layer mixing alone), and the first advection tests (B0, B4: the cubed sphere). Part of the work towards a CO₂ 4D-Var flux inversion with <a href="https://github.com/RemoteSensingTools/AtmosTransport.jl">AtmosTransport.jl</a>.</p>
+  <p class="meta">Page generated 2026-11-23 22:05 UTC · AT origin/main 78210a013, unmodified · figures carry their own "Made:" time</p>
 </header>
 
 <!-- ============================================================ PART 1 -->
@@ -172,7 +172,7 @@ details[open] summary { margin-bottom: 0.6rem; }
     <div class="card">
       <h3>B: advection alone</h3>
       <ul>
-        <li>B4 dot products: upwind, unlimited slopes, unlimited PPM (linear)</li>
+        <li><span class="chip ok">done</span> B0 forward checks and B4 dot products, idealized winds: upwind, unlimited slopes, unlimited PPM (Part 3)</li>
         <li>B3 epsilon sweep: monotone/CW84 PPM, Lin–Rood ORD 5/7</li>
         <li>B1, B2, B5, B6 with the scheme(s) you choose</li>
       </ul>
@@ -336,6 +336,69 @@ details[open] summary { margin-bottom: 0.6rem; }
   </details>
 
   <p class="meta">Scripts: <code>tests/a1_pbl/a1_pbl.jl</code> (test), <code>tests/a1_pbl/fig_a1_pbl.py</code> (figures, statistics). Data: <code>/temp2/ksuselj/adjoint_exps/a1_pbl/{day1,month1}_*</code>.</p>
+</section>
+
+<!-- ============================================================ PART 3 -->
+<section id="advection">
+  <div class="eyebrow">Part 3 · Tests B0 and B4</div>
+  <h2>Advection on the cubed sphere: forward checks and dot products</h2>
+
+  <div class="callout prose" style="display:flex;flex-direction:column;gap:0.6rem">
+    <p><strong>Question.</strong> Does AT handle the cubed sphere correctly, forward and in the adjoint: the panel edges (seams), the corners, and the halo exchange between panels? Before any finite-difference test, two checks that need no finite differences: B0, simple forward properties, and B4, whether the adjoint is the exact transpose of the forward model.</p>
+    <p><strong>What is on and off.</strong> Advection only (no PBL mixing, convection or sources). Linear schemes only, so that the transpose can be tested exactly: upwind, unlimited slopes, unlimited PPM.</p>
+    <p><strong>Winds and grid.</strong> Idealized solid-body rotation on the C90 cubed sphere with GEOS-native panels, as in the MERRA-2 binaries: (1) uniform zonal flow, 8 m/s at the equator; (2) rotation about an axis tilted 45° toward 0° E, 38.6 m/s (one revolution in 12 days), which crosses panel edges and corners. The face mass fluxes come from the stream function at the cell corners, so every cell has zero divergence to round-off (6e-16 of the largest flux): the air mass stays constant and there is no vertical flux. The edge faces are stored by both panels and carry the same flux (checked for all 1080 seam faces). 4 layers of equal thickness (independent here), time step 1800 s, largest Courant number 0.84.</p>
+    <p><strong>B0 forward checks (12 days, tilted rotation).</strong> A uniform tracer must stay uniform and the tracer mass must be conserved. A cosine bell (radius R/3, on the rotation equator) carried once around the globe must return to its start, with no imprint of the seams.</p>
+    <p><strong>B4 dot products (5 days, both flows).</strong> For random fields <i>r</i> (initial tracer mass) and λ (final adjoint), ⟨λ, L r⟩ from a forward run must equal ⟨Lᵀλ, r⟩ from an adjoint run, to round-off. Four kinds of fields: global; a band of 4 cells along every panel edge; 4 × 4 patches at every panel corner; and <i>r</i> in the edge band of panel 1 with λ in the edge bands of the other panels, so that the two fields only meet through transport across a seam. A sign error or a missing corner term in the seam code would give an O(1) difference.</p>
+  </div>
+
+  <h3>Result</h3>
+  <ul class="prose" style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.3rem">
+    <li><strong>B4 passes: the adjoint is the exact transpose across seams and corners.</strong> Float64: |⟨λ, L r⟩ − ⟨Lᵀλ, r⟩| / Σ|λ · L r| = 3e-18 to 1e-15 for all three schemes, both flows and all four kinds of field. Float32: 1e-10 to 5e-7, the round-off of Float32.</li>
+    <li><strong>B0 passes in Float64.</strong> A uniform tracer stays uniform to 1e-13 (upwind, slopes) and 8e-13 (PPM) over 12 days; tracer mass changes by at most 3e-16. The bell returns to its start with no visible imprint of the panel edges (figure below). Normalized errors after one revolution: PPM l2 0.049, slopes l2 0.10, upwind l2 0.84 (strongly diffusive, as expected for a first-order scheme; the bell radius is about 19 cells).</li>
+    <li><strong>Float32: the air mass drifts by up to 8.6e-4 in 12 days</strong>, and a uniform tracer by 4e-5 (upwind, slopes) to 3e-4 (PPM). The fluxes are divergence-free in Float64, but rounding each one to Float32 leaves a small divergence that accumulates, because this idealized run never resets the air mass. Production runs reset it to the meteorology at every met window, so this drift should not build up there. The bell errors are the same as in Float64 to three digits.</li>
+  </ul>
+
+  <figure>
+    <img src="img/fig_b4_dot.png" alt="Dot-product test error for three advection schemes, four kinds of random fields and two flows, Float64 and Float32" loading="lazy">
+    <figcaption><strong>B4: transpose test.</strong> |⟨λ, L r⟩ − ⟨Lᵀλ, r⟩| normalized by Σ|λ · L r|, for (a) the uniform zonal flow and (b) the tilted rotation, 5 days, C90, GPU. Filled circles: Float64; open squares: Float32; dotted lines: machine epsilon of each precision.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="img/fig_b0_bell.png" alt="Cosine bell after one revolution around the globe for three schemes, final field and error, with panel edges" loading="lazy">
+    <figcaption><strong>B0: cosine bell after one revolution</strong> (12 days, rotation tilted 45°, Float64, C90). Left: final field; right: final − initial. Black contours: the initial bell (0.1, 0.5, 0.9); grey: the panel edges. Upwind diffuses the bell; slopes and PPM keep it, with the dispersive trailing ripples of unlimited schemes. No pattern follows the panel edges.</figcaption>
+  </figure>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>B0, 12 days</th><th class="num">Uniform tracer, max |q/q₀ − 1|</th><th class="num">Air mass, max |m/m₀ − 1|</th><th class="num">Bell l1</th><th class="num">l2</th><th class="num">l∞</th><th class="num">Bell max</th><th class="num">Bell min</th><th class="num">Time, 12 days</th></tr></thead>
+    <tbody>
+      <tr class="group"><td colspan="9">Float64</td></tr>
+      <tr><td>upwind</td><td class="num">1.1e-13</td><td class="num">2.1e-11</td><td class="num">1.416</td><td class="num">0.835</td><td class="num">0.864</td><td class="num">0.135</td><td class="num">0</td><td class="num">1.7 s</td></tr>
+      <tr><td>slopes, unlimited</td><td class="num">2.0e-13</td><td class="num">2.1e-11</td><td class="num">0.153</td><td class="num">0.101</td><td class="num">0.098</td><td class="num">0.968</td><td class="num">−0.038</td><td class="num">1.9 s</td></tr>
+      <tr><td>PPM, unlimited</td><td class="num">8.2e-13</td><td class="num">2.1e-11</td><td class="num">0.088</td><td class="num">0.049</td><td class="num">0.050</td><td class="num">0.980</td><td class="num">−0.027</td><td class="num">1.6 s</td></tr>
+      <tr class="group"><td colspan="9">Float32</td></tr>
+      <tr><td>upwind</td><td class="num">3.8e-5</td><td class="num">8.6e-4</td><td class="num">1.416</td><td class="num">0.835</td><td class="num">0.864</td><td class="num">0.135</td><td class="num">0</td><td class="num">1.6 s</td></tr>
+      <tr><td>slopes, unlimited</td><td class="num">4.7e-5</td><td class="num">8.6e-4</td><td class="num">0.153</td><td class="num">0.101</td><td class="num">0.098</td><td class="num">0.968</td><td class="num">−0.038</td><td class="num">1.2 s</td></tr>
+      <tr><td>PPM, unlimited</td><td class="num">3.0e-4</td><td class="num">8.6e-4</td><td class="num">0.088</td><td class="num">0.049</td><td class="num">0.050</td><td class="num">0.980</td><td class="num">−0.027</td><td class="num">1.2 s</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="meta">l1, l2, l∞: normalized errors of Williamson et al. (1992), area-weighted. Time: one forward run of 576 steps, GPU, after compilation.</p>
+
+  <h3>Timing, B4 (5 days, 240 steps, C90, 4 layers, GPU)</h3>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Scheme</th><th class="num">Forward, Float64</th><th class="num">Adjoint, Float64</th><th class="num">Forward, Float32</th><th class="num">Adjoint, Float32</th></tr></thead>
+    <tbody>
+      <tr><td>upwind</td><td class="num">0.2–0.5 s</td><td class="num">0.8–2.5 s</td><td class="num">0.2–0.5 s</td><td class="num">0.7–2.5 s</td></tr>
+      <tr><td>slopes, unlimited</td><td class="num">0.3–0.9 s</td><td class="num">0.9–3.3 s</td><td class="num">0.2–0.5 s</td><td class="num">0.7–2.5 s</td></tr>
+      <tr><td>PPM, unlimited</td><td class="num">0.2–0.7 s</td><td class="num">0.9–2.9 s</td><td class="num">0.2–0.5 s</td><td class="num">0.8–2.5 s</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="meta">Ranges over the field kinds and the two flows, after compilation (the first call of each scheme takes 5–16 s, mostly compilation). The adjoint includes the forward run that records the tape.</p>
+
+  <p class="meta">Scripts: <code>tests/b_adv/b_adv.jl</code> (tests), <code>tests/b_adv/fig_b_adv.py</code> (figures, statistics). Data: <code>/temp2/ksuselj/adjoint_exps/b_adv/</code>. Next: B1/B2 finite-difference tests with point receptors at seams and corners, then real winds (B5).</p>
 </section>
 </main>
 

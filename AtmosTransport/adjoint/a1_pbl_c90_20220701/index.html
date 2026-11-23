@@ -72,8 +72,8 @@ details[open] summary { margin-bottom: 0.6rem; }
   <p class="meta"><a href="../../../">Home</a> › <a href="../../">AtmosTransport</a> › Adjoint tests</p>
   <div class="eyebrow">AtmosTransport.jl · CO₂ adjoint and 4D-Var</div>
   <h1>AT Adjoint Ladder</h1>
-  <p class="prose">Which adjoints <a href="https://github.com/RemoteSensingTools/AtmosTransport.jl">AtmosTransport.jl</a> (AT) can compute, which of them we have verified, and the first verification step (A1: boundary-layer mixing alone), on the way to a CO₂ 4D-Var flux inversion with AT.</p>
-  <p class="meta">Page generated 2026-11-23 20:35 UTC · AT origin/main 78210a013, unmodified · figures carry their own "Made:" time</p>
+  <p class="prose">Which adjoints AT can compute, which of them we have verified, and the first verification step (A1: boundary-layer mixing alone). Part of the work towards a CO₂ 4D-Var flux inversion with <a href="https://github.com/RemoteSensingTools/AtmosTransport.jl">AtmosTransport.jl</a>.</p>
+  <p class="meta">Page generated 2026-11-23 21:05 UTC · AT origin/main 78210a013, unmodified · figures carry their own "Made:" time</p>
 </header>
 
 <!-- ============================================================ PART 1 -->
@@ -204,9 +204,9 @@ details[open] summary { margin-bottom: 0.6rem; }
 
   <h3>Result</h3>
   <ul class="prose" style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.3rem">
-    <li><strong>Float64 passes on CPU and GPU.</strong> Weighted error 2–4e-14, median 2e-14 to 3e-12, 100 % same sign. CPU and GPU adjoints differ by at most 1.8e-11 relative.</li>
+    <li><strong>Float64 passes on CPU and GPU.</strong> Against the central FD: weighted error 2–4e-14, median 2e-14 to 3e-12, 100 % same sign. Against the linear FD, which has no cancellation: median 3e-15 to 8e-15, max 1.1e-13, flat in the size of the response. CPU and GPU adjoints differ by at most 1.8e-11 relative.</li>
     <li><strong>Float32 adjoint error is about 1e-5</strong> against the Float64 FD: weighted 5e-6 to 3e-5, median 2e-6 to 1e-5, 99th percentile below 1e-3, no sign errors. The error does not grow for small sensitivities. The worst single columns (up to 0.13) have sensitivities near 1e-6.</li>
-    <li><strong>Float32 finite differences are not reliable</strong> for sensitivities below about 1e-3. Each FD subtracts two runs near 450 ppm, so Float32 round-off dominates (rows 3 and 5 of the figure). Use Float64 FD as the reference.</li>
+    <li><strong>Float32 finite differences are not reliable</strong> for sensitivities below about 1e-3. Each FD subtracts two runs near 450 ppm, so Float32 round-off dominates (rows m–p and u–x of the figure). Use Float64 FD as the reference.</li>
     <li><strong>The GPU is 8× faster</strong> than 16 CPU threads for the adjoint.</li>
   </ul>
 
@@ -223,6 +223,11 @@ details[open] summary { margin-bottom: 0.6rem; }
       <tr><td></td><td class="num">10</td><td class="num">19 327</td><td class="num">4.2e-14</td><td class="num">4.6e-14</td><td class="num">1.3e-9</td><td class="num">8.7e-9</td><td class="num">100 %</td></tr>
       <tr><td></td><td class="num">20</td><td class="num">10 291</td><td class="num">4.5e-14</td><td class="num">2.6e-12</td><td class="num">5.1e-9</td><td class="num">1.9e-8</td><td class="num">100 %</td></tr>
       <tr><td></td><td class="num">30</td><td class="num">6 949</td><td class="num">3.1e-14</td><td class="num">9.0e-13</td><td class="num">2.9e-9</td><td class="num">1.2e-8</td><td class="num">100 %</td></tr>
+      <tr class="group"><td colspan="8">Float64 CPU adjoint, against the linear FD (perturbation-only tracer)</td></tr>
+      <tr><td>Float64 CPU</td><td class="num">1</td><td class="num">17 299</td><td class="num">1.2e-14</td><td class="num">7.9e-15</td><td class="num">–</td><td class="num">1.1e-13</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">10</td><td class="num">19 327</td><td class="num">9.5e-15</td><td class="num">5.4e-15</td><td class="num">–</td><td class="num">1.0e-13</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">20</td><td class="num">10 291</td><td class="num">4.8e-15</td><td class="num">3.3e-15</td><td class="num">–</td><td class="num">8.4e-14</td><td class="num">100 %</td></tr>
+      <tr><td></td><td class="num">30</td><td class="num">6 949</td><td class="num">4.5e-15</td><td class="num">3.3e-15</td><td class="num">–</td><td class="num">2.2e-14</td><td class="num">100 %</td></tr>
       <tr class="group"><td colspan="8">Float32 adjoint, against the Float64 CPU FD</td></tr>
       <tr><td>Float32 CPU</td><td class="num">1</td><td class="num">17 299</td><td class="num">1.9e-5</td><td class="num">1.0e-5</td><td class="num">9.0e-4</td><td class="num">7.0e-2</td><td class="num">100 %</td></tr>
       <tr><td></td><td class="num">10</td><td class="num">19 327</td><td class="num">2.5e-5</td><td class="num">8.2e-6</td><td class="num">9.1e-4</td><td class="num">1.3e-1</td><td class="num">100 %</td></tr>
@@ -253,8 +258,14 @@ details[open] summary { margin-bottom: 0.6rem; }
 
   <figure>
     <img src="img/fig_a1_day1_diff.png" alt="Relative error of the adjoint against the finite difference, per column, for four seed levels and six setups" loading="lazy">
-    <figcaption><strong>Relative error |adjoint/FD − 1| against the FD</strong>, one point per column, coloured by the perturbed level <i>L</i>. Rows: (a–h) Float64 CPU and GPU against their own FD; (i–l, q–t) Float32 against its own Float32 FD; (m–p, u–x) Float32 against the Float64 FD. Columns: seed level <i>r</i> = 1, 10, 20, 30. Float64 errors fall from 1e-8 to 1e-16 as the sensitivity grows (round-off of the FD). Float32 against Float64 FD: flat near 1e-5.</figcaption>
+    <figcaption><strong>Relative error |adjoint/FD − 1|</strong>, one point per column, coloured by the perturbed level <i>L</i>. Rows: (a–d) Float64 CPU against its own central FD; (e–h) the same adjoint against the linear FD; (i–l) Float64 GPU against its own FD; (m–p) Float32 CPU against its own Float32 FD; (q–t) Float32 CPU against the Float64 FD; (u–x) Float32 GPU against its own FD; (y–ab) Float32 GPU against the Float64 FD. Columns: seed level <i>r</i> = 1, 10, 20, 30.</figcaption>
   </figure>
+
+  <div class="callout prose" style="display:flex;flex-direction:column;gap:0.5rem">
+    <p><strong>Why the error falls as the FD grows.</strong> The central FD subtracts two runs near 450 ppm and divides by 2ε = 100 ppm. Its round-off is therefore a constant <em>absolute</em> error δ, which in Float64 is about 1e-15 to 1e-14 in sensitivity units. A constant δ gives |adj/FD − 1| = δ/FD: a line of slope −1, from about 1e-9 at FD = 1e-6 to 1e-15 at FD = 1 (rows a–d, i–l). The Float32 FD (rows m–p, u–x) shows the same slope, about 1e9 higher.</p>
+    <p><strong>The adjoint itself is flat at about 1e-15.</strong> The linear FD comes from a tracer that carries only the perturbation (ε at level <i>L</i>, zero elsewhere), so there is no cancellation. Against it, the Float64 adjoint has a median relative error of 3e-15 to 8e-15 and a maximum of 1.1e-13, for every size of the response (rows e–h).</p>
+    <p><strong>The GCHP column test looked flat</strong> (at most 1.4e-6, independently of the response) because a relative error of about 1e-7 to 1e-6, typical of single-precision rounding somewhere in that chain, hid the FD's absolute round-off. In AT everything is Float64, so the FD round-off becomes visible.</p>
+  </div>
 
   <details>
     <summary>Scatter of adjoint against FD</summary>
@@ -264,7 +275,7 @@ details[open] summary { margin-bottom: 0.6rem; }
     </figure>
   </details>
 
-  <p class="meta">Scripts: <code>tests/a1_pbl/a1_pbl.jl</code> (test), <code>tests/a1_pbl/fig_a1_pbl.py</code> (figures, statistics). Data: <code>/temp2/ksuselj/adjoint_exps/a1_pbl/day1_*</code>. Next: the 1-month runs (not started).</p>
+  <p class="meta">Scripts: <code>tests/a1_pbl/a1_pbl.jl</code> (test), <code>tests/a1_pbl/fig_a1_pbl.py</code> (figures, statistics). Data: <code>/temp2/ksuselj/adjoint_exps/a1_pbl/day1_*</code>. 1-month runs on GPU: running (results will be added here).</p>
 </section>
 </main>
 

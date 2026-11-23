@@ -19,6 +19,6 @@ GEOS-IT, C90 L72, 1 Dec 2021. Surface-layer CO2 tracer, non-local PBL scheme.</l
 <ul>
 <li><a href="adjoint/a1_pbl_c90_20220701/">Which adjoints AtmosTransport supports, and test A1: boundary-layer mixing alone</a>:
 map of the adjoint options (advection, PBL mixing, convection, observations); adjoint vs finite differences in every column, MERRA-2 C90, July 2022, 1 day and 1 month,
-Float32 and Float64 on CPU and GPU, with timing. Float64 agrees to round-off; Float32 error about 1e-5 after 1 day, 2e-5 to 1e-4 after 1 month. Advection on the cubed sphere (B0, B4): the adjoint is the exact transpose across panel edges and corners (dot products to 1e-15).</li>
+Float32 and Float64 on CPU and GPU, with timing. Float64 agrees to round-off; Float32 error about 1e-5 after 1 day, 2e-5 to 1e-4 after 1 month. Advection on the cubed sphere (B0, B4, B1/B2): the adjoint is the exact transpose across panel edges and corners (dot products to 1e-15) and matches finite differences at seam and corner receptors to round-off.</li>
 </ul>
 </main></body></html>

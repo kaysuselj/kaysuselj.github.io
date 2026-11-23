@@ -83,7 +83,7 @@ details[open] summary { margin-bottom: 0.6rem; }
   <p class="prose">AT ships a <strong>discrete</strong> adjoint only: the reverse pass replays the production step and transposes each operator, with the branches of limited schemes recorded on the tape. There is no continuous (reversed-wind, CONT) advection adjoint, and we do not need one: the discrete adjoint is the one we use. Adjoints exist on the <strong>cubed sphere only</strong>. A configuration that uses an operator without an adjoint is rejected before the run, with the operator named (<code>require_adjoint_support</code>); nothing is silently approximated. Source: <code>src/Adjoints/AdjointSupport.jl</code>, <code>src/Adjoints/Adjoints.jl</code>, <code>docs/src/theory/adjoint_status.md</code>.</p>
 
   <figure>
-    <img src="img/at_config_map_adjoint.png" alt="Map of AtmosTransport options by met source, grid, convection, PBL mixing and advection scheme, with rings for options that have an adjoint and stars for adjoints verified in our tests" loading="lazy">
+    <img src="img/at_config_map_adjoint.png?v=4ae970cc00" alt="Map of AtmosTransport options by met source, grid, convection, PBL mixing and advection scheme, with rings for options that have an adjoint and stars for adjoints verified in our tests" loading="lazy">
     <figcaption><strong>Which options AT can run, and which have an adjoint.</strong> (a) Met source by grid, convection and PBL mixing; (b) grid by advection scheme. Filled dot: available; half dot: available with a second tool; ring: has an adjoint (cubed sphere only, under the lettered conditions); star: adjoint verified in our tests (A1, B4). Availability follows AT main 4cbd561, adjoint support AT main 78210a0.</figcaption>
   </figure>
 
@@ -316,7 +316,7 @@ details[open] summary { margin-bottom: 0.6rem; }
   <p class="meta">Wall clock, 24 hourly met windows. Includes Julia compilation (about 15–35 s per phase, measured on a 2-window run) and the adjoint's capture of the met inputs, so the per-seed figures are upper bounds.</p>
 
   <figure>
-    <img src="img/fig_a1_day1_diff.png" alt="Relative error of the adjoint against the finite difference, per column, for four seed levels and six setups" loading="lazy">
+    <img src="img/fig_a1_day1_diff.png?v=2d9ef1fb91" alt="Relative error of the adjoint against the finite difference, per column, for four seed levels and six setups" loading="lazy">
     <figcaption><strong>Relative error |adjoint/FD − 1|</strong>, one point per column, coloured by the perturbed level <i>L</i>. Rows: (a–d) Float64 CPU against its own central FD; (e–h) the same adjoint against the linear FD; (i–l) Float64 GPU against its own FD; (m–p) Float32 CPU against its own Float32 FD; (q–t) Float32 CPU against the Float64 FD; (u–x) Float32 GPU against its own FD; (y–ab) Float32 GPU against the Float64 FD. Columns: seed level <i>r</i> = 1, 10, 20, 30.</figcaption>
   </figure>
 
@@ -329,7 +329,7 @@ details[open] summary { margin-bottom: 0.6rem; }
   <details>
     <summary>Scatter of adjoint against FD</summary>
     <figure>
-      <img src="img/fig_a1_day1_scatter.png" alt="Adjoint against finite difference for each setup and seed level" loading="lazy">
+      <img src="img/fig_a1_day1_scatter.png?v=0872838fe6" alt="Adjoint against finite difference for each setup and seed level" loading="lazy">
       <figcaption>Adjoint against central FD of the same run, one point per column. All points lie on the 1:1 line except the smallest Float32 sensitivities, where the Float32 FD is noise.</figcaption>
     </figure>
   </details>
@@ -378,13 +378,13 @@ details[open] summary { margin-bottom: 0.6rem; }
   <p class="meta">Wall clock. Includes Julia compilation (about 15–35 s per phase). The remaining adjoint time is building one model per day for the capture.</p>
 
   <figure>
-    <img src="img/fig_a1_month1_diff.png" alt="Relative error of the adjoint against the finite difference after one month, per column, four seed levels" loading="lazy">
+    <img src="img/fig_a1_month1_diff.png?v=81f4e6f9f7" alt="Relative error of the adjoint against the finite difference after one month, per column, four seed levels" loading="lazy">
     <figcaption><strong>Relative error |adjoint/FD − 1| after 1 month</strong>, one point per column, coloured by the perturbed level <i>L</i>. Rows: (a–d) Float64 GPU against its own central FD; (e–h) the same adjoint against the linear FD; (i–l) Float32 GPU against its own Float32 FD; (m–p) Float32 GPU against the Float64 FD. Columns: seed level <i>r</i> = 1, 10, 20, 30.</figcaption>
   </figure>
   <details>
     <summary>Scatter of adjoint against FD, 1 month</summary>
     <figure>
-      <img src="img/fig_a1_month1_scatter.png" alt="Adjoint against finite difference after one month" loading="lazy">
+      <img src="img/fig_a1_month1_scatter.png?v=cc8d12fe6e" alt="Adjoint against finite difference after one month" loading="lazy">
       <figcaption>Adjoint against the central FD of the same run, one point per column.</figcaption>
     </figure>
   </details>
@@ -413,11 +413,11 @@ details[open] summary { margin-bottom: 0.6rem; }
   </ul>
 
   <figure>
-    <img src="img/fig_b4_dot.png" alt="Dot-product test error for three advection schemes, four kinds of random fields and two flows, Float64 and Float32" loading="lazy">
+    <img src="img/fig_b4_dot.png?v=b2771e0511" alt="Dot-product test error for three advection schemes, four kinds of random fields and two flows, Float64 and Float32" loading="lazy">
     <figcaption><strong>B4: transpose test.</strong> |⟨λ, L r⟩ − ⟨Lᵀλ, r⟩| normalized by Σ|λ · L r|, for (a) the uniform zonal flow and (b) the tilted rotation, 5 days, C90, GPU. Filled circles: Float64; open squares: Float32; dotted lines: machine epsilon of each precision.</figcaption>
   </figure>
   <figure>
-    <img src="img/fig_b0_bell.png" alt="Cosine bell after one revolution around the globe for three schemes, final field and error, with panel edges" loading="lazy">
+    <img src="img/fig_b0_bell.png?v=d9cc71a2bc" alt="Cosine bell after one revolution around the globe for three schemes, final field and error, with panel edges" loading="lazy">
     <figcaption><strong>B0: cosine bell after one revolution</strong> (12 days, rotation tilted 45°, Float64, C90). Left: final field; right: final − initial. Black contours: the initial bell (0.1, 0.5, 0.9); grey: the panel edges. Upwind diffuses the bell; slopes and PPM keep it, with the trailing ripples of unlimited schemes. No pattern follows the panel edges.</figcaption>
   </figure>
 
@@ -446,11 +446,11 @@ details[open] summary { margin-bottom: 0.6rem; }
     <li>The footprints are the true derivatives of each discrete scheme: upwind is smooth and entirely positive; unlimited slopes and PPM show alternating positive and negative rings, 14–18 % and 41–47 % of Σ|footprint| negative (the GCHP paper: 13–19 % for its limited scheme, 41–46 % for the unlimited one). No feature follows the panel edges.</li>
   </ul>
   <figure>
-    <img src="img/fig_b12_err.png" alt="Relative error of the adjoint against finite differences for B1 and B2, three schemes, coloured by receptor, Float64 and Float32" loading="lazy">
+    <img src="img/fig_b12_err.png?v=566ff5d3c0" alt="Relative error of the adjoint against finite differences for B1 and B2, three schemes, coloured by receptor, Float64 and Float32" loading="lazy">
     <figcaption><strong>B1/B2: |adjoint/FD − 1| against |FD|</strong> (central FD, ε = 20 ppm, Float64), C90, 5 days, GPU. Rows: B1 (zonal flow, 8 m/s), B2 (rotation tilted 45°); columns: scheme. Colour: receptor; filled circles: Float64 adjoint; open squares: Float32 adjoint. The Float64 error falls as 1/|FD| (round-off of the central FD, as in A1).</figcaption>
   </figure>
   <figure>
-    <img src="img/fig_b12_fp.png" alt="Adjoint footprints of receptors on a panel edge and at a cube corner, for both flows" loading="lazy">
+    <img src="img/fig_b12_fp.png?v=b3e4117f32" alt="Adjoint footprints of receptors on a panel edge and at a cube corner, for both flows" loading="lazy">
     <figcaption><strong>Adjoint footprints</strong> ∂q<sub>end</sub>(receptor)/∂q<sub>0</sub> of the receptors on the seam and at the corner, for each scheme (rows: upwind, unlimited slopes, unlimited PPM), Float64, symmetric logarithmic colour scale; + marks the receptor, grey the panel edges; one window per column. Columns: B1 edge and corner (the footprint lies 31° upstream: 8 m/s × 5 days), B2 edge and corner (along the tilted rotation circle). Upwind is smooth and positive (monotone scheme); unlimited slopes and PPM show alternating rings, 14–18 % and 41–47 % of Σ|footprint| negative.</figcaption>
   </figure>
   <div class="scroll">

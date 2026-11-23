@@ -80,7 +80,12 @@ details[open] summary { margin-bottom: 0.6rem; }
 <section id="support">
   <div class="eyebrow">Part 1</div>
   <h2>Which adjoints AT supports</h2>
-  <p class="prose">AT ships a <strong>discrete</strong> adjoint only: the reverse pass replays the production step and transposes each operator, with the branches of limited schemes recorded on the tape. There is no continuous (reversed-wind, CONT) advection adjoint. Adjoints exist on the <strong>cubed sphere only</strong>. A configuration that uses an operator without an adjoint is rejected before the run, with the operator named (<code>require_adjoint_support</code>); nothing is silently approximated. Source: <code>src/Adjoints/AdjointSupport.jl</code>, <code>src/Adjoints/Adjoints.jl</code>, <code>docs/src/theory/adjoint_status.md</code>.</p>
+  <p class="prose">AT ships a <strong>discrete</strong> adjoint only: the reverse pass replays the production step and transposes each operator, with the branches of limited schemes recorded on the tape. There is no continuous (reversed-wind, CONT) advection adjoint, and we do not need one: the discrete adjoint is the one we use. Adjoints exist on the <strong>cubed sphere only</strong>. A configuration that uses an operator without an adjoint is rejected before the run, with the operator named (<code>require_adjoint_support</code>); nothing is silently approximated. Source: <code>src/Adjoints/AdjointSupport.jl</code>, <code>src/Adjoints/Adjoints.jl</code>, <code>docs/src/theory/adjoint_status.md</code>.</p>
+
+  <figure>
+    <img src="img/at_config_map_adjoint.png" alt="Map of AtmosTransport options by met source, grid, convection, PBL mixing and advection scheme, with rings for options that have an adjoint and stars for adjoints verified in our tests" loading="lazy">
+    <figcaption><strong>Which options AT can run, and which have an adjoint.</strong> (a) Met source by grid, convection and PBL mixing; (b) grid by advection scheme. Filled dot: available; half dot: available with a second tool; ring: has an adjoint (cubed sphere only, under the lettered conditions); star: adjoint verified in our tests (A1, B4). Availability follows AT main 4cbd561, adjoint support AT main 78210a0.</figcaption>
+  </figure>
 
   <div class="legend">
     <span><span class="chip ok">verified here</span> passed our ladder test</span>
@@ -116,7 +121,7 @@ details[open] summary { margin-bottom: 0.6rem; }
       <tr><td>Lin–Rood ORD 5</td><td><code>"linrood"</code>, upwind or <code>fv3_kord8</code> vertical</td><td><span class="chip unit">AT tests only</span></td><td>Closest to GCHP. Tape must stay on the device: a C48 month fits one 46 GB GPU, C90 about 11 days.</td></tr>
       <tr><td>Lin–Rood ORD 7</td><td>same</td><td><span class="chip unit">AT tests only</span></td><td>Marked preview by AT.</td></tr>
       <tr><td>No advection</td><td><code>scheme = "none"</code></td><td><span class="chip no">no adjoint</span></td><td>Workaround: upwind with zero fluxes.</td></tr>
-      <tr><td>Reversed-wind (CONT)</td><td></td><td><span class="chip no">no adjoint</span></td><td>Not implemented in AT. Would have to be built for a CONT vs DISC comparison.</td></tr>
+      <tr><td>Reversed-wind (CONT)</td><td></td><td><span class="chip na">not needed</span></td><td>Not in AT, and not needed: we use the discrete adjoint.</td></tr>
 
       <tr class="group"><td colspan="4">PBL mixing (<code>[diffusion] kind</code>)</td></tr>
       <tr><td>Holtslag–Boville local Kz</td><td><code>"geoschem_holtslag_boville_vdiff"</code></td><td><span class="chip ok">verified here</span></td><td>A1: 1 day F32/F64 on CPU/GPU, 1 month F32/F64 on GPU (Part 2). Kz from the meteorology, so the operator is linear in CO₂.</td></tr>
@@ -170,7 +175,6 @@ details[open] summary { margin-bottom: 0.6rem; }
         <li>B4 dot products: upwind, unlimited slopes, unlimited PPM (linear)</li>
         <li>B3 epsilon sweep: monotone/CW84 PPM, Lin–Rood ORD 5/7</li>
         <li>B1, B2, B5, B6 with the scheme(s) you choose</li>
-        <li>No CONT adjoint: the CONT/DISC comparison needs new code</li>
       </ul>
     </div>
     <div class="card">

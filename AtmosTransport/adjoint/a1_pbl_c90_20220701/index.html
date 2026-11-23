@@ -443,7 +443,7 @@ details[open] summary { margin-bottom: 0.6rem; }
   <ul class="prose" style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.3rem">
     <li><strong>Float64 passes at every receptor, for both flows and all three schemes.</strong> Against the linear FD: median 3e-16 to 2e-14, max 6e-12. Against the central FD: weighted error 4e-13 to 4e-11 (the central FD's own round-off), all signs correct.</li>
     <li><strong>Float32 adjoint against the Float64 FD:</strong> weighted error 5e-6 to 1.3e-4, median 1e-5 to 2e-4, all signs correct. The Float32 central FD itself is noise for small sensitivities (up to order 1 error, wrong signs), as in A1.</li>
-    <li>The footprints show the alternating positive and negative rings of an unlimited scheme (41–47 % of Σ|footprint| negative), the true derivative of the discrete scheme, as in the GCHP DISC footprints. No feature follows the panel edges.</li>
+    <li>The footprints are the true derivatives of each discrete scheme: upwind is smooth and entirely positive; unlimited slopes and PPM show alternating positive and negative rings, 14–18 % and 41–47 % of Σ|footprint| negative (the GCHP paper: 13–19 % for its limited scheme, 41–46 % for the unlimited one). No feature follows the panel edges.</li>
   </ul>
   <figure>
     <img src="img/fig_b12_err.png" alt="Relative error of the adjoint against finite differences for B1 and B2, three schemes, coloured by receptor, Float64 and Float32" loading="lazy">
@@ -451,7 +451,7 @@ details[open] summary { margin-bottom: 0.6rem; }
   </figure>
   <figure>
     <img src="img/fig_b12_fp.png" alt="Adjoint footprints of receptors on a panel edge and at a cube corner, for both flows" loading="lazy">
-    <figcaption><strong>Adjoint footprints</strong> ∂q<sub>end</sub>(receptor)/∂q<sub>0</sub> of the receptors on the seam and at the corner, unlimited PPM, Float64, symmetric logarithmic colour scale; + marks the receptor, grey the panel edges. (a, b) B1: the footprint lies 31° upstream (8 m/s × 5 days). (c, d) B2: the footprint lies along the tilted rotation circle.</figcaption>
+    <figcaption><strong>Adjoint footprints</strong> ∂q<sub>end</sub>(receptor)/∂q<sub>0</sub> of the receptors on the seam and at the corner, for each scheme (rows: upwind, unlimited slopes, unlimited PPM), Float64, symmetric logarithmic colour scale; + marks the receptor, grey the panel edges; one window per column. Columns: B1 edge and corner (the footprint lies 31° upstream: 8 m/s × 5 days), B2 edge and corner (along the tilted rotation circle). Upwind is smooth and positive (monotone scheme); unlimited slopes and PPM show alternating rings, 14–18 % and 41–47 % of Σ|footprint| negative.</figcaption>
   </figure>
   <div class="scroll">
   <table>

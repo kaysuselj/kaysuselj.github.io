@@ -744,7 +744,7 @@ details[open] summary { margin-bottom: 0.6rem; }
 
   <h3>Observations and the truth</h3>
   <figure>
-    <img src="img/fig_osse1_obs.png?v=b81d349d90" alt="OCO-2 soundings per day by mode, map of the soundings, and the truth XCO2 at the soundings by latitude band" loading="lazy">
+    <img src="img/fig_osse1_obs.png?v=2fa1d14e72" alt="OCO-2 soundings per day by mode, map of the soundings, and the truth XCO2 at the soundings by latitude band" loading="lazy">
     <figcaption><strong>The observations of the OSSE.</strong> (a) Soundings per day by OCO-2 mode (350 035 in all: land nadir 58 544, land glint 54 185, ocean glint 237 306; median 640 per day; 36 days without data: 1–6 Oct 2015 (before the package's first sounding), 27 Oct – 1 Nov 2015, 29 Mar – 3 Apr 2016, 11–20 Aug 2016, 31 Dec 2016, 2 Jan 2017 (its 77 soundings dropped, see above) and 22–27 Feb 2017). (b) Number of soundings per 2° × 2° cell over the window: the ocean-glint tracks dominate; no data poleward of about 70° and over winter high latitudes. (c) The truth at the soundings: daily mean XCO₂ of the truth run (AT, before noise) south of 20° S, between 20° S and 20° N, and north of 20° N (days with at least 20 soundings). The northern drawdown of summer 2016 and the growth of about 2.5 ppm per year are visible; the observations are these values plus noise with a standard deviation of 0.80 ppm.</figcaption>
   </figure>
 
@@ -752,25 +752,30 @@ details[open] summary { margin-bottom: 0.6rem; }
   <ul class="prose" style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.3rem">
     <li><strong>J fell from 1.210 × 10⁸ to 2.07 × 10⁵</strong> (a factor of 585) in 13 evaluations, all accepted. The starting J equals GCHP's (1.21 × 10⁸). J<sub>obs</sub> = 1.81 × 10⁵, 4 % above its value at the truth (the noise, 1.745 × 10⁵); 2 J<sub>obs</sub>/N = 1.03.</li>
     <li><strong>TER 2016 error: +43.73 → +1.07 PgC</strong>; cell-month RMSE −59.7 % against the prior. GCHP C24: +1.18 PgC and −62 % (discrete adjoint), +1.15 PgC and −59 % (continuous).</li>
+    <li><strong>TransCom land regions:</strong> the sum of the regional 2016 TER errors falls from 43.73 to 3.75 PgC (GCHP: 42.7 → 3.9).</li>
     <li><strong>Ocean 2016 error: −1.12 → −1.17 PgC</strong> (GCHP: −1.18): with a diagonal B the ocean flux is not corrected, as in GCHP.</li>
     <li><strong>About 16 min per evaluation</strong> (forward + adjoint over 578 days); a forward run of the window takes 6 min.</li>
   </ul>
 
   <figure>
-    <img src="img/fig_osse1_cost.png?v=f6bc205fe5" alt="Cost function, its observation and background parts, and 2 J_obs over N per evaluation of the long OSSE 1" loading="lazy">
+    <img src="img/fig_osse1_cost.png?v=45f84f9498" alt="Cost function, its observation and background parts, and 2 J_obs over N per evaluation of the long OSSE 1" loading="lazy">
     <figcaption><strong>Cost function per evaluation.</strong> (a) J, with J(truth) and GCHP's final J (C24, discrete adjoint) for orientation; (b) J<sub>obs</sub> and J<sub>b</sub>, with their values at the truth; (c) 2 J<sub>obs</sub>/N (1 = the noise level). J(truth) lies above J because J<sub>b</sub>(truth) grows with the number of controls: at C48 there are 4 times as many cells as at C24, so GCHP's J values are not directly comparable.</figcaption>
   </figure>
   <figure>
-    <img src="img/fig_osse1_flux_error.png?v=a59f97e7b4" alt="2016 TER and ocean flux errors and cell RMSE change per evaluation" loading="lazy">
+    <img src="img/fig_osse1_flux_error.png?v=52a47123eb" alt="2016 TER and ocean flux errors and cell RMSE change per evaluation" loading="lazy">
     <figcaption><strong>2016 flux errors per accepted evaluation.</strong> (a, b) global 2016 total minus truth for TER and ocean; (c, d) cell-month RMSE relative to the prior. Dashed: GCHP C24 final values (discrete adjoint).</figcaption>
   </figure>
   <figure>
-    <img src="img/fig_osse1_monthly.png?v=200939ddf1" alt="Monthly global TER and ocean totals over the 19-month window for truth, prior and posterior" loading="lazy">
+    <img src="img/fig_osse1_monthly.png?v=38b1f4a02a" alt="Monthly global TER and ocean totals over the 19-month window for truth, prior and posterior" loading="lazy">
     <figcaption><strong>Monthly global totals</strong> of truth, prior and the posterior of evaluation 13 over the whole window; grey: 2016. The last month (April 2017) is weakly constrained.</figcaption>
   </figure>
   <figure>
-    <img src="img/fig_osse1_maps.png?v=75d45a45b4" alt="Maps of the 2016 TER and ocean flux errors of the prior and of the posterior" loading="lazy">
+    <img src="img/fig_osse1_maps.png?v=753c52515f" alt="Maps of the 2016 TER and ocean flux errors of the prior and of the posterior" loading="lazy">
     <figcaption><strong>2016 flux error maps</strong>, prior − truth and posterior − truth, for TER (a, b) and ocean (c, d), gC m⁻² yr⁻¹.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/fig_osse1_transcom.png?v=0b49dc2958" alt="January to December 2016 TER totals for the 11 TransCom land regions and ocean totals for the 11 TransCom ocean regions, truth, prior and posterior" loading="lazy">
+    <figcaption><strong>TransCom regions, January–December 2016 totals</strong> (PgC yr⁻¹) of truth, prior and the posterior of evaluation 13: (a) TER of the 11 land regions, (b) ocean flux of the 11 ocean regions. Sum of the regional |posterior − truth|: TER 43.73 → 3.75 PgC (GCHP C24: 42.7 → 3.9 with the discrete adjoint, 4.2 with the continuous one); ocean 1.26 → 1.31 PgC (not corrected with a diagonal B). Regions: TransCom-3 map of the CarbonTracker regions file (1°); each C48 cell takes the region at its centre, and coastal cells with land (ocean) flux whose centre lies in an ocean (land) region go to the nearest land (ocean) region, so the regional totals add up to the global ones.</figcaption>
   </figure>
   <p class="meta">Scripts: <code>osses/driver/fourdvar_3month.jl</code> (run; options --mmap_dir, --stop_rel, --host_tape_gib), <code>osses/driver/fig_osse1_long.py</code> (figures, numbers: <code>results_osse1.txt</code>). Data: <code>/temp2/ksuselj/adjoint_exps/osses/osse1_long/</code>.</p>
 </section>

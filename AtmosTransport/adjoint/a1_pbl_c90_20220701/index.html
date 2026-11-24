@@ -72,8 +72,8 @@ details[open] summary { margin-bottom: 0.6rem; }
   <p class="meta"><a href="../../../">Home</a> › <a href="../../">AtmosTransport</a> › Adjoint tests</p>
   <div class="eyebrow">AtmosTransport.jl · CO₂ adjoint and 4D-Var</div>
   <h1>AT Adjoint Ladder</h1>
-  <p class="prose">Which adjoints AT can compute, which of them we have verified, the first verification step (A1: boundary-layer mixing alone), the first advection tests (B0, B4, B1, B2: the cubed sphere), the 4D-Var gradient tests (D1, D2) and a 3-month OSSE test of the 4D-Var. Part of the work towards a CO₂ 4D-Var flux inversion with <a href="https://github.com/RemoteSensingTools/AtmosTransport.jl">AtmosTransport.jl</a>.</p>
-  <p class="meta">Page generated 2026-11-24 09:10 PST · AT origin/main 78210a013, unmodified · figures carry their own "Made:" time</p>
+  <p class="prose">Which adjoints AT can compute, which of them we have verified, the column tests (A1: boundary-layer mixing alone; A2, A3: convection and the surface-flux gradient), the first advection tests (B0, B4, B1, B2: the cubed sphere), the 4D-Var gradient tests (D1, D2) and a 3-month OSSE test of the 4D-Var. Part of the work towards a CO₂ 4D-Var flux inversion with <a href="https://github.com/RemoteSensingTools/AtmosTransport.jl">AtmosTransport.jl</a>.</p>
+  <p class="meta">Page generated 2026-11-24 09:20 PST · AT origin/main 78210a013, unmodified · figures carry their own "Made:" time</p>
 </header>
 
 <!-- ============================================================ PART 1 -->
@@ -133,7 +133,7 @@ details[open] summary { margin-bottom: 0.6rem; }
       <tr><td>Surface-flux coupling</td><td><code>surface_flux_boundary</code> false | true</td><td><span class="chip unit">AT tests only</span></td><td>Both: V/2 → S → V/2, and S(dt) → V(dt).</td></tr>
 
       <tr class="group"><td colspan="4">Convection (<code>[convection] kind</code>)</td></tr>
-      <tr><td>CMFMC (GCHP-style)</td><td><code>"cmfmc"</code>, <code>cloud_base = "cmfmc"</code>, no clamp</td><td><span class="chip unit">AT tests only</span></td><td>Default options. Transpose identity in F32/F64. Our binaries have CMFMC and DTRAIN.</td></tr>
+      <tr><td>CMFMC (GCHP-style)</td><td><code>"cmfmc"</code>, <code>cloud_base = "cmfmc"</code>, no clamp</td><td><span class="chip unit">AT tests only</span></td><td>Default options. Verified in A2/A2c/A3 (1 day CPU/GPU, 1 month GPU, F32/F64; <a href="#a23">Part 2b</a>). No negative sensitivities beyond round-off. Our binaries have CMFMC and DTRAIN.</td></tr>
       <tr><td>CMFMC with clamp or archived cloud base</td><td><code>clamp = true</code> | <code>cloud_base = "dqrcu"</code></td><td><span class="chip no">no adjoint</span></td><td>The positivity clamp is nonlinear and its branches are not taped.</td></tr>
       <tr><td>CMFMC matrix (TM5 LU on CMFMC)</td><td><code>"cmfmc_matrix"</code></td><td><span class="chip unit">AT tests only</span></td><td>Only with <code>use_collab_lu = false</code>, <code>lmax_conv = 0</code>, <code>n_merge = 1</code>.</td></tr>
       <tr><td>TM5 four-field</td><td><code>"tm5"</code></td><td><span class="chip open">exists, not in our data</span></td><td>Same restriction. Needs entu/detu/entd/detd (ERA5 binaries).</td></tr>
@@ -147,11 +147,11 @@ details[open] summary { margin-bottom: 0.6rem; }
 
       <tr class="group"><td colspan="4">Observations, controls, optimizer</td></tr>
       <tr><td>Observation operators</td><td>layer, column mean, placed point, averaging-kernel column</td><td><span class="chip unit">AT tests only</span></td><td>Averaging-kernel column matches TM5-4DVAR's Fortran to 1e-13. One reverse pass for all observations.</td></tr>
-      <tr><td>Controls</td><td>surface-flux windows; initial condition</td><td><span class="chip ok">verified here</span></td><td>Initial-condition sensitivity used in A1. Surface-flux gradient: test A3.</td></tr>
+      <tr><td>Controls</td><td>surface-flux windows; initial condition</td><td><span class="chip ok">verified here</span></td><td>Initial-condition sensitivity: A1, A2. Surface-flux gradient: A3 (<a href="#a23">Part 2b</a>), and D1/D2 for the full model.</td></tr>
       <tr><td>Covariance, optimizer</td><td>B<sup>1/2</sup>, log-normal transform, gradient descent, L-BFGS</td><td><span class="chip unit">AT tests only</span></td><td>Preview. We may use our own Python L-BFGS-B instead.</td></tr>
 
       <tr class="group"><td colspan="4">Backends and precision</td></tr>
-      <tr><td>CPU, CUDA</td><td>Float32, Float64</td><td><span class="chip ok">verified here</span></td><td>For the A1 operator. GPU adjoint advection uses atomic adds: not bit-reproducible.</td></tr>
+      <tr><td>CPU, CUDA</td><td>Float32, Float64</td><td><span class="chip ok">verified here</span></td><td>For the A1–A3 column operators. GPU adjoint advection uses atomic adds: not bit-reproducible.</td></tr>
       <tr><td>Metal, ROCm</td><td></td><td><span class="chip na">not used</span></td><td>Metal has no adjoint yet; ROCm not validated.</td></tr>
     </tbody>
   </table>
@@ -165,8 +165,9 @@ details[open] summary { margin-bottom: 0.6rem; }
         <li><span class="chip ok">done</span> A1 Holtslag–Boville, 1 day</li>
         <li><span class="chip ok">done</span> A1 Holtslag–Boville, 1 month (GPU)</li>
         <li><span class="chip open">next</span> A1 with Beljaars–Viterbo and constant Kz</li>
-        <li>A2 + CMFMC (no clamp), + CMFMC matrix</li>
-        <li>A3 with respect to the surface flux</li>
+        <li><span class="chip ok">done</span> A2 + CMFMC (no clamp), and CMFMC alone, 1 day and 1 month</li>
+        <li><span class="chip ok">done</span> A3 with respect to the surface flux (PBL; PBL + CMFMC)</li>
+        <li>A2 with the CMFMC matrix (optional)</li>
       </ul>
     </div>
     <div class="card">
@@ -200,7 +201,7 @@ details[open] summary { margin-bottom: 0.6rem; }
 <section id="roadmap">
   <div class="eyebrow">Roadmap</div>
   <h2>Before a full adjoint and the OSSE</h2>
-  <p class="prose">Verified so far: PBL mixing alone (A1: exact in Float64; Float32 error 1e-5 to 1e-4, 1 day and 1 month), and advection on the cubed sphere for the linear schemes (B0, B4, B1/B2: exact transpose across panel edges and corners, clean forward seams, finite differences at seams). Still open, in three groups. Decisions block the later tests; the meteorology for 2015–2017 is probably the longest item.</p>
+  <p class="prose">Verified so far: the column processes (A1 PBL mixing, A2 + CMFMC convection, A3 surface-flux gradient: exact in Float64; Float32 error 1e-6 to 1e-4, 1 day and 1 month), and advection on the cubed sphere for the linear schemes (B0, B4, B1/B2: exact transpose across panel edges and corners, clean forward seams, finite differences at seams). Still open, in three groups. Decisions block the later tests; the meteorology for 2015–2017 is probably the longest item.</p>
   <div class="grid2">
     <div class="card">
       <h3>1. Decisions</h3>
@@ -215,8 +216,8 @@ details[open] summary { margin-bottom: 0.6rem; }
     <div class="card">
       <h3>2. Verification</h3>
       <ul>
-        <li><strong>A2</strong> PBL + CMFMC convection, column test; negative values without the clamp?</li>
-        <li><strong>A3</strong> gradient with respect to the surface flux (where and when the flux enters the step).</li>
+        <li><span class="chip ok">done</span> <strong>A2</strong> PBL + CMFMC convection, column test: exact in Float64; no negative values beyond round-off without the clamp.</li>
+        <li><span class="chip ok">done</span> <strong>A3</strong> gradient with respect to the surface flux: exact in Float64, so the flux enters the adjoint where it enters the forward step.</li>
         <li><strong>B3</strong> epsilon sweep with the chosen limited scheme.</li>
         <li><strong>B5, B6</strong> real MERRA-2 winds, 5 days and 1 month. The idealized tests had no vertical flux and constant air mass, so vertical advection and the air-mass resets are untested.</li>
         <li><strong>C1</strong> all processes with real winds.</li>
@@ -392,6 +393,174 @@ details[open] summary { margin-bottom: 0.6rem; }
   <p class="meta">Scripts: <code>tests/a1_pbl/a1_pbl.jl</code> (test), <code>tests/a1_pbl/fig_a1_pbl.py</code> (figures, statistics). Data: <code>/temp2/ksuselj/adjoint_exps/a1_pbl/{day1,month1}_*</code>.</p>
 </section>
 
+<!-- ============================================================ PART 2b -->
+<section id="a23">
+  <div class="eyebrow">Part 2b · Tests A2, A2c, A3</div>
+  <h2>Convection and the surface flux, 1 day and 1 month</h2>
+
+  <div class="callout prose" style="display:flex;flex-direction:column;gap:0.6rem">
+    <p><strong>Question.</strong> A2: is AT's adjoint of CMFMC convection (no clamp, CMFMC cloud base), together with PBL mixing, the exact transpose of the forward model on real meteorology? Without the positivity clamp, does it make negative sensitivities? A3: is the gradient with respect to a surface flux right? This also checks where and when the flux enters the step (the centre of the step, between the two halves of the mixing). Both questions are asked in Float64 and Float32, on CPU and GPU.</p>
+    <p><strong>What is on and off.</strong> Advection is off, as in A1 (all mass fluxes zero, upwind), so every column is independent and one run tests all 48 600 columns. Four cases:</p>
+    <ul style="margin:0;padding-left:1.2rem">
+      <li><strong>A2</strong>: Holtslag–Boville PBL mixing + CMFMC convection; sensitivity to the initial CO₂, as in A1.</li>
+      <li><strong>A2c</strong>: CMFMC convection alone (PBL mixing off), to isolate the convection adjoint.</li>
+      <li><strong>A3 PBL</strong>: PBL mixing only; sensitivity to a surface-flux pattern.</li>
+      <li><strong>A3 PBL + CMFMC</strong>: both processes; sensitivity to the same surface-flux pattern.</li>
+    </ul>
+    <p><strong>Initial condition and period.</strong> As A1: MERRA-2, C90, 72 levels, hourly windows, from 2022-07-01 00 UTC for 1 day (CPU and GPU) and 31 days (GPU). CO₂ 400 ppm. A2/A2c perturb one level <i>L</i> per column by ±50 ppm. A3 uses a flux pattern d<i>E</i> = 1e-9 s⁻¹ × surface-layer air mass × (0.2 + 0.8 |sin 3λ cos 2φ|), constant in time. Its forward runs are: <i>q</i><sub>0</sub> with flux 2d<i>E</i>; <i>q</i><sub>0</sub> without flux (central FD = half the difference); and a tracer starting at 0 with flux d<i>E</i> (the linear FD, no cancellation). The adjoint sums the per-step surface footprints times d<i>E</i>. Seeds as in A1: one level <i>r</i> = 1, 10, 20, 30 from the surface, at the end of the period.</p>
+    <p><strong>What agreement means.</strong> Float64: |adjoint/FD − 1| at round-off, and flat against the linear FD. Float32: the error against the Float64 FD is what the 4D-Var gradient would carry from these operators. A real error in the convection adjoint or in the timing of the flux injection would show up as an error far above round-off (1e-3 or more) in Float64.</p>
+  </div>
+
+  <h3>Result</h3>
+  <ul class="prose" style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.3rem">
+    <li><strong>Float64 passes in all four cases, both periods, CPU and GPU.</strong> Against the linear FD: weighted error 4e-16 to 4e-14, the largest single column 7e-12, flat in the size of the response. Against the central FD: weighted error 2e-14 to 5e-12 (1 month at most 1.3e-10, for a seed level that only weak responses reach), 100 % same sign. CPU and GPU adjoints differ by at most 3e-11 relative.</li>
+    <li><strong>The surface-flux gradient is right</strong> (A3: 5e-15 to 3e-14 against the linear FD). So the flux enters the adjoint at the same place in the step as in the forward model.</li>
+    <li><strong>No real negative sensitivities from unclamped CMFMC.</strong> Some adjoint values are negative, but the most negative is 5e-15 of the largest (Float64) or 9e-9 (Float32): round-off around zero.</li>
+    <li><strong>Float32 is accurate to about 1e-5 to 1e-4</strong> against the Float64 FD, with 100 % same sign: weighted 5e-6 to 2e-5 after 1 day and 2e-5 to 1.6e-4 after 1 month, with the 99th percentile below 5e-4 (one seed of A3 PBL: 3e-3 after 1 month). Convection alone is about 30 times less sensitive to Float32 than PBL mixing (2e-7 to 2e-6). These are the same levels as A1.</li>
+    <li><strong>The Float32 run logs are misleading.</strong> They compare the Float32 adjoint with the Float32 central FD (grey crosses in the summary). For weak responses that FD is cancellation noise, so the logs show same-sign fractions down to 55 % and errors up to 4e2. Against the Float64 FD these columns are fine.</li>
+    <li><strong>One apparent Float64 failure is FD noise.</strong> A3 PBL, 1 day, seed level 30: in 29 columns the PBL carries the flux only just to level 30, and the responses are at most 2e-13 of the CO₂ value. The central FD subtracts two runs near 400 ppm, so it is round-off there (error up to 1, panels d, l of its figure). Against the linear FD the same adjoint is exact to 4e-14 (panel h).</li>
+  </ul>
+
+  <figure>
+    <img src="img/fig_a23_summary.png?v=8d6cf21167" alt="Weighted error of the adjoint against finite differences for the four cases, two periods, four comparisons and four seed levels" loading="lazy">
+    <figcaption><strong>Weighted error Σ|adj − FD| / Σ|FD| of every run.</strong> (a) 1 day: filled CPU, open GPU; (b) 1 month, GPU. Per case, the four groups are: Float64 against its own central FD (blue), Float64 against the linear FD (green), Float32 against the Float64 FD (red), and Float32 against its own Float32 FD (grey crosses: what the run logs report, not a test of the adjoint). Within each group, seed levels 1, 10, 20, 30 from left to right. Shaded: Float64 round-off range. The blue point near 1e-5 in A3 PBL, 1 day, is seed level 30 (29 columns, central FD at round-off; see above).</figcaption>
+  </figure>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Case, period</th><th>Comparison</th><th class="num">Weighted error</th><th class="num">Median</th><th class="num">99th pct</th><th class="num">Same sign</th></tr></thead>
+    <tbody>
+      <tr class="group"><td colspan="6">Float64 adjoint against the linear FD (CPU and GPU; range over the four seed levels)</td></tr>
+      <tr><td>A2 PBL + CMFMC, 1 day</td><td>64-bit vs linear FD</td><td class="num">4.5e-15 – 1.1e-14</td><td class="num">3.6e-15 – 6.9e-15</td><td class="num">1.9e-14 – 4.9e-14</td><td class="num">100 %</td></tr>
+      <tr><td>A2 PBL + CMFMC, 1 month</td><td>64-bit vs linear FD</td><td class="num">1.9e-14 – 3.6e-14</td><td class="num">1.5e-14 – 2.2e-14</td><td class="num">7.9e-14 – 1.5e-13</td><td class="num">100 %</td></tr>
+      <tr><td>A2c CMFMC alone, 1 day</td><td>64-bit vs linear FD</td><td class="num">3.6e-16 – 1.3e-15</td><td class="num">6.7e-16 – 1.0e-15</td><td class="num">3.1e-15 – 1.2e-14</td><td class="num">100 %</td></tr>
+      <tr><td>A2c CMFMC alone, 1 month</td><td>64-bit vs linear FD</td><td class="num">1.8e-15 – 3.6e-15</td><td class="num">2.2e-15 – 2.7e-15</td><td class="num">1.1e-14 – 1.6e-14</td><td class="num">100 %</td></tr>
+      <tr><td>A3 PBL, 1 day</td><td>64-bit vs linear FD</td><td class="num">1.6e-15 – 1.1e-14</td><td class="num">4.7e-15 – 8.0e-15</td><td class="num">3.0e-14 – 3.5e-14</td><td class="num">100 %</td></tr>
+      <tr><td>A3 PBL, 1 month</td><td>64-bit vs linear FD</td><td class="num">3.0e-14 – 3.4e-14</td><td class="num">2.2e-14 – 2.6e-14</td><td class="num">9.5e-14 – 1.2e-13</td><td class="num">100 %</td></tr>
+      <tr><td>A3 PBL + CMFMC, 1 day</td><td>64-bit vs linear FD</td><td class="num">5.1e-15 – 9.2e-15</td><td class="num">4.4e-15 – 6.2e-15</td><td class="num">2.3e-14 – 5.7e-14</td><td class="num">100 %</td></tr>
+      <tr><td>A3 PBL + CMFMC, 1 month</td><td>64-bit vs linear FD</td><td class="num">1.7e-14 – 2.7e-14</td><td class="num">1.8e-14 – 1.9e-14</td><td class="num">8.8e-14 – 1.0e-13</td><td class="num">100 %</td></tr>
+      <tr class="group"><td colspan="6">Float32 adjoint against the Float64 FD (CPU and GPU; range over the four seed levels)</td></tr>
+      <tr><td>A2 PBL + CMFMC, 1 day</td><td>32-bit vs 64-bit FD</td><td class="num">4.9e-6 – 2.1e-5</td><td class="num">2.7e-6 – 8.2e-6</td><td class="num">1.8e-4 – 4.8e-4</td><td class="num">100 %</td></tr>
+      <tr><td>A2 PBL + CMFMC, 1 month</td><td>32-bit vs 64-bit FD</td><td class="num">2.1e-5 – 9.6e-5</td><td class="num">2.6e-5 – 7.3e-5</td><td class="num">3.1e-4 – 4.0e-4</td><td class="num">100 %</td></tr>
+      <tr><td>A2c CMFMC alone, 1 day</td><td>32-bit vs 64-bit FD</td><td class="num">2.2e-7 – 6.4e-7</td><td class="num">3.7e-7 – 5.2e-7</td><td class="num">2.2e-6 – 5.4e-6</td><td class="num">100 %</td></tr>
+      <tr><td>A2c CMFMC alone, 1 month</td><td>32-bit vs 64-bit FD</td><td class="num">1.3e-6 – 2.1e-6</td><td class="num">1.3e-6 – 1.7e-6</td><td class="num">7.1e-6 – 9.1e-6</td><td class="num">100 %</td></tr>
+      <tr><td>A3 PBL, 1 day (seed levels 1–20)</td><td>32-bit vs 64-bit FD</td><td class="num">1.8e-5 – 2.4e-5</td><td class="num">6.2e-6 – 2.3e-5</td><td class="num">1.8e-4 – 1.5e-3</td><td class="num">100 %</td></tr>
+      <tr><td>A3 PBL, 1 month</td><td>32-bit vs 64-bit FD</td><td class="num">2.3e-5 – 1.6e-4</td><td class="num">1.9e-5 – 1.8e-4</td><td class="num">9.8e-5 – 3.2e-3</td><td class="num">100 %</td></tr>
+      <tr><td>A3 PBL + CMFMC, 1 day</td><td>32-bit vs 64-bit FD</td><td class="num">5.8e-6 – 1.5e-5</td><td class="num">4.8e-6 – 7.4e-6</td><td class="num">7.4e-5 – 4.0e-4</td><td class="num">100 %</td></tr>
+      <tr><td>A3 PBL + CMFMC, 1 month</td><td>32-bit vs 64-bit FD</td><td class="num">2.6e-5 – 4.9e-5</td><td class="num">2.7e-5 – 5.5e-5</td><td class="num">9.3e-5 – 5.3e-4</td><td class="num">100 %</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="meta">Initial-condition cases: columns with |FD| &gt; 1e-6. Surface-flux cases: columns with |FD| &gt; 1e-6 of the largest FD. Selection from the Float64 run, so every comparison uses the same columns. Per-seed numbers, the central-FD comparison and CPU vs GPU: <code>tests/a1_pbl/figures/stats_a23.txt</code>.</p>
+
+  <h3>Timing</h3>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Case</th><th class="num">1 day F64 CPU</th><th class="num">1 day F32 CPU</th><th class="num">1 day F64 GPU</th><th class="num">1 day F32 GPU</th><th class="num">1 month F64 GPU</th><th class="num">1 month F32 GPU</th></tr></thead>
+    <tbody>
+      <tr><td>A2 PBL + CMFMC</td><td class="num">49 + 414 s</td><td class="num">45 + 271 s</td><td class="num">44 + 54 s</td><td class="num">39 + 34 s</td><td class="num">188 + 898 s</td><td class="num">89 + 364 s</td></tr>
+      <tr><td>A2c CMFMC alone</td><td class="num">46 + 380 s</td><td class="num">46 + 279 s</td><td class="num">40 + 47 s</td><td class="num">38 + 32 s</td><td class="num">144 + 758 s</td><td class="num">72 + 327 s</td></tr>
+      <tr><td>A3 PBL</td><td class="num">49 + 409 s</td><td class="num">50 + 301 s</td><td class="num">41 + 57 s</td><td class="num">36 + 36 s</td><td class="num">189 + 930 s</td><td class="num">77 + 362 s</td></tr>
+      <tr><td>A3 PBL + CMFMC</td><td class="num">56 + 458 s</td><td class="num">68 + 348 s</td><td class="num">43 + 60 s</td><td class="num">42 + 38 s</td><td class="num">203 + 1009 s</td><td class="num">90 + 382 s</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="meta">Wall clock, forward (3 tracers) + adjoint (4 seeds, including the capture of met inputs and Julia compilation of about 15–35 s per phase). CPU: 16 threads; GPU: NVIDIA L40S. Convection adds about 10 % to the adjoint.</p>
+
+  <h3>Per-case figures</h3>
+  <p class="prose">Each figure has the same layout as A1. Rows: Float64 CPU against its own central FD and against the linear FD, Float64 GPU, then Float32 CPU and GPU, each against its own Float32 FD and against the Float64 FD (1 month: GPU rows only). Columns: seed level <i>r</i> = 1, 10, 20, 30. Initial-condition cases are coloured by the perturbed level <i>L</i>. Surface-flux cases are coloured by |latitude|, with the FD axis scaled by the largest FD of that seed level.</p>
+  <details>
+    <summary>A2: PBL + CMFMC, initial condition, 1 day</summary>
+    <figure>
+      <img src="img/fig_a23_a2_ic_cmfmc_day1_diff.png?v=828931cc9d" alt="Relative error of the adjoint against the finite difference, A2: PBL + CMFMC, initial condition, 1 day" loading="lazy">
+      <figcaption><strong>|adjoint/FD − 1|</strong>, A2: PBL + CMFMC, initial condition, 1 day, one point per column.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/fig_a23_a2_ic_cmfmc_day1_scatter.png?v=f57c06bdce" alt="Adjoint against finite difference, A2: PBL + CMFMC, initial condition, 1 day" loading="lazy">
+      <figcaption>Adjoint against the central FD of the same run.</figcaption>
+    </figure>
+  </details>
+  <details>
+    <summary>A2: PBL + CMFMC, initial condition, 1 month</summary>
+    <figure>
+      <img src="img/fig_a23_a2_ic_cmfmc_month1_diff.png?v=65cc9bd1af" alt="Relative error of the adjoint against the finite difference, A2: PBL + CMFMC, initial condition, 1 month" loading="lazy">
+      <figcaption><strong>|adjoint/FD − 1|</strong>, A2: PBL + CMFMC, initial condition, 1 month, one point per column.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/fig_a23_a2_ic_cmfmc_month1_scatter.png?v=8ca4071db7" alt="Adjoint against finite difference, A2: PBL + CMFMC, initial condition, 1 month" loading="lazy">
+      <figcaption>Adjoint against the central FD of the same run.</figcaption>
+    </figure>
+  </details>
+  <details>
+    <summary>A2c: CMFMC alone, initial condition, 1 day</summary>
+    <figure>
+      <img src="img/fig_a23_a2c_convonly_day1_diff.png?v=3f7a271524" alt="Relative error of the adjoint against the finite difference, A2c: CMFMC alone, initial condition, 1 day" loading="lazy">
+      <figcaption><strong>|adjoint/FD − 1|</strong>, A2c: CMFMC alone, initial condition, 1 day, one point per column.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/fig_a23_a2c_convonly_day1_scatter.png?v=787de29746" alt="Adjoint against finite difference, A2c: CMFMC alone, initial condition, 1 day" loading="lazy">
+      <figcaption>Adjoint against the central FD of the same run.</figcaption>
+    </figure>
+  </details>
+  <details>
+    <summary>A2c: CMFMC alone, initial condition, 1 month</summary>
+    <figure>
+      <img src="img/fig_a23_a2c_convonly_month1_diff.png?v=5933549872" alt="Relative error of the adjoint against the finite difference, A2c: CMFMC alone, initial condition, 1 month" loading="lazy">
+      <figcaption><strong>|adjoint/FD − 1|</strong>, A2c: CMFMC alone, initial condition, 1 month, one point per column.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/fig_a23_a2c_convonly_month1_scatter.png?v=be8888ad34" alt="Adjoint against finite difference, A2c: CMFMC alone, initial condition, 1 month" loading="lazy">
+      <figcaption>Adjoint against the central FD of the same run.</figcaption>
+    </figure>
+  </details>
+  <details>
+    <summary>A3: PBL only, surface flux, 1 day</summary>
+    <figure>
+      <img src="img/fig_a23_a3_flux_pbl_day1_diff.png?v=da9da13aee" alt="Relative error of the adjoint against the finite difference, A3: PBL only, surface flux, 1 day" loading="lazy">
+      <figcaption><strong>|adjoint/FD − 1|</strong>, A3: PBL only, surface flux, 1 day, one point per column.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/fig_a23_a3_flux_pbl_day1_scatter.png?v=ca12562d97" alt="Adjoint against finite difference, A3: PBL only, surface flux, 1 day" loading="lazy">
+      <figcaption>Adjoint against the central FD of the same run.</figcaption>
+    </figure>
+  </details>
+  <details>
+    <summary>A3: PBL only, surface flux, 1 month</summary>
+    <figure>
+      <img src="img/fig_a23_a3_flux_pbl_month1_diff.png?v=e8cd7dacec" alt="Relative error of the adjoint against the finite difference, A3: PBL only, surface flux, 1 month" loading="lazy">
+      <figcaption><strong>|adjoint/FD − 1|</strong>, A3: PBL only, surface flux, 1 month, one point per column.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/fig_a23_a3_flux_pbl_month1_scatter.png?v=074376970a" alt="Adjoint against finite difference, A3: PBL only, surface flux, 1 month" loading="lazy">
+      <figcaption>Adjoint against the central FD of the same run.</figcaption>
+    </figure>
+  </details>
+  <details>
+    <summary>A3: PBL + CMFMC, surface flux, 1 day</summary>
+    <figure>
+      <img src="img/fig_a23_a3_flux_cmfmc_day1_diff.png?v=d766d7da06" alt="Relative error of the adjoint against the finite difference, A3: PBL + CMFMC, surface flux, 1 day" loading="lazy">
+      <figcaption><strong>|adjoint/FD − 1|</strong>, A3: PBL + CMFMC, surface flux, 1 day, one point per column.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/fig_a23_a3_flux_cmfmc_day1_scatter.png?v=60c5d80395" alt="Adjoint against finite difference, A3: PBL + CMFMC, surface flux, 1 day" loading="lazy">
+      <figcaption>Adjoint against the central FD of the same run.</figcaption>
+    </figure>
+  </details>
+  <details>
+    <summary>A3: PBL + CMFMC, surface flux, 1 month</summary>
+    <figure>
+      <img src="img/fig_a23_a3_flux_cmfmc_month1_diff.png?v=6142123491" alt="Relative error of the adjoint against the finite difference, A3: PBL + CMFMC, surface flux, 1 month" loading="lazy">
+      <figcaption><strong>|adjoint/FD − 1|</strong>, A3: PBL + CMFMC, surface flux, 1 month, one point per column.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/fig_a23_a3_flux_cmfmc_month1_scatter.png?v=1410e38234" alt="Adjoint against finite difference, A3: PBL + CMFMC, surface flux, 1 month" loading="lazy">
+      <figcaption>Adjoint against the central FD of the same run.</figcaption>
+    </figure>
+  </details>
+
+  <p class="meta">Scripts: <code>tests/a1_pbl/col_test.jl</code> (test; <code>--conv cmfmc|none --pbl none --mode ic|flux</code>), <code>tests/a1_pbl/fig_a23.py</code> (figures, statistics). Data: <code>/temp2/ksuselj/adjoint_exps/a23/</code>.</p>
+</section>
+
 <!-- ============================================================ PART 3 -->
 <section id="advection">
   <div class="eyebrow">Part 3 · Tests B0, B4, B1 and B2</div>
@@ -498,7 +667,7 @@ details[open] summary { margin-bottom: 0.6rem; }
   <h3>D1 and D2: the gradient</h3>
   <p class="prose"><strong>Setup.</strong> At x = 1 (the prior, J<sub>b</sub> = 0), Float64, same window and observations. D1: the 8 TER elements of largest |∂J/∂x|, the 2 largest ocean elements and 2 further land cells, each changed by ±0.05 (central FD; J would be exactly quadratic in x for a linear model, and the monotone limiter makes it nearly so). D2: J along d = −g/max|g| at ε = 0.1, 0.03, 0.01, 0.003; ΔJ/ε = G + c ε fitted to the two smallest ε; error = g·d/G − 1.</p>
   <figure>
-    <img src="img/fig_3m_gradient.png?v=ab15fef417" alt="D1 adjoint against finite differences, its relative error, and the D2 Taylor test ratio against epsilon" loading="lazy">
+    <img src="img/fig_3m_gradient.png?v=706ad600d6" alt="D1 adjoint against finite differences, its relative error, and the D2 Taylor test ratio against epsilon" loading="lazy">
     <figcaption><strong>D1 and D2.</strong> (a) |adjoint| against |FD| ∂J/∂x for the 12 elements (green TER, purple ocean); (b) |adjoint/FD − 1|; (c) ΔJ/(ε g·d) against ε, which tends to 1 linearly (J is quadratic). The largest D1 errors (2e-3, three TER cells) are where the limiter switches within ±0.05; the error of the gradient itself is the D2 number.</figcaption>
   </figure>
   <div class="scroll">
@@ -515,19 +684,19 @@ details[open] summary { margin-bottom: 0.6rem; }
 
   <h3>The 3-month 4D-Var</h3>
   <figure>
-    <img src="img/fig_3m_cost.png?v=ded3f5af28" alt="Cost function, its observation and background terms, and 2 J_obs over N per evaluation" loading="lazy" style="max-width:640px">
+    <img src="img/fig_3m_cost.png?v=a2f55fd8fc" alt="Cost function, its observation and background terms, and 2 J_obs over N per evaluation" loading="lazy" style="max-width:640px">
     <figcaption><strong>Cost function per evaluation.</strong> (a) J, with J at the true fluxes (dotted, 8.27e4). (b) J<sub>obs</sub> and J<sub>b</sub>; grey lines: J<sub>obs</sub>(truth) = 2.74e4 (the noise) and J<sub>b</sub>(truth) = 5.52e4 (the truth is 1/1.3 = 0.77 in every element, 1.15 σ<sub>b</sub> from the prior). (c) 2 J<sub>obs</sub>/N; 1 = the noise level. As in GCHP, the minimizer ends below J(truth) (expected: J<sub>b</sub> at the minimum is small) and J<sub>obs</sub> ends just above J<sub>obs</sub>(truth) (2.76e4 vs 2.74e4), so there is no overfitting.</figcaption>
   </figure>
   <figure>
-    <img src="img/fig_3m_flux_error.png?v=da7499dc2c" alt="TER and ocean flux error and cell RMSE change per evaluation" loading="lazy">
+    <img src="img/fig_3m_flux_error.png?v=0eb07a6048" alt="TER and ocean flux error and cell RMSE change per evaluation" loading="lazy">
     <figcaption><strong>Flux error per evaluation.</strong> Top: January–March global total minus truth; bottom: change of the cell RMSE (monthly flux per C48 cell, over the cells with flux) relative to the prior. Left TER, right ocean.</figcaption>
   </figure>
   <figure>
-    <img src="img/fig_3m_monthly.png?v=09f6b7ac4d" alt="Global monthly TER and ocean totals for truth, prior and posterior" loading="lazy">
+    <img src="img/fig_3m_monthly.png?v=e1ab49742e" alt="Global monthly TER and ocean totals for truth, prior and posterior" loading="lazy">
     <figcaption><strong>Global monthly totals</strong> of TER (a) and ocean (b): truth black, prior grey dashed, posterior (evaluation 20) orange.</figcaption>
   </figure>
   <figure>
-    <img src="img/fig_3m_maps.png?v=997809463c" alt="Maps of the January to March TER and ocean flux error, prior and posterior" loading="lazy">
+    <img src="img/fig_3m_maps.png?v=f7913ef61f" alt="Maps of the January to March TER and ocean flux error, prior and posterior" loading="lazy">
     <figcaption><strong>January–March flux error per C48 cell</strong> [gC m⁻²]: TER (top) and ocean (bottom), prior (left) and posterior (right). The TER error is removed over the tropics and the southern continents, leaving cell-scale noise of both signs; the ocean posterior is the prior.</figcaption>
   </figure>
   <div class="scroll">
@@ -559,6 +728,7 @@ details[open] summary { margin-bottom: 0.6rem; }
   </div>
 </section>
 </main>
+
 
 </body>
 </html>

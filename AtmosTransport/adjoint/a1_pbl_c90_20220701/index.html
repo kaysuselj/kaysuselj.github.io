@@ -72,8 +72,8 @@ details[open] summary { margin-bottom: 0.6rem; }
   <p class="meta"><a href="../../../">Home</a> › <a href="../../">AtmosTransport</a> › Adjoint tests</p>
   <div class="eyebrow">AtmosTransport.jl · CO₂ adjoint and 4D-Var</div>
   <h1>AT Adjoint Ladder</h1>
-  <p class="prose">Which adjoints AT can compute, which of them we have verified, the first verification step (A1: boundary-layer mixing alone), and the first advection tests (B0, B4, B1, B2: the cubed sphere). Part of the work towards a CO₂ 4D-Var flux inversion with <a href="https://github.com/RemoteSensingTools/AtmosTransport.jl">AtmosTransport.jl</a>.</p>
-  <p class="meta">Page generated 2026-11-23 15:05 PST · AT origin/main 78210a013, unmodified · figures carry their own "Made:" time</p>
+  <p class="prose">Which adjoints AT can compute, which of them we have verified, the first verification step (A1: boundary-layer mixing alone), the first advection tests (B0, B4, B1, B2: the cubed sphere), the 4D-Var gradient tests (D1, D2) and a 3-month OSSE test of the 4D-Var. Part of the work towards a CO₂ 4D-Var flux inversion with <a href="https://github.com/RemoteSensingTools/AtmosTransport.jl">AtmosTransport.jl</a>.</p>
+  <p class="meta">Page generated 2026-11-24 09:10 PST · AT origin/main 78210a013, unmodified · figures carry their own "Made:" time</p>
 </header>
 
 <!-- ============================================================ PART 1 -->
@@ -181,7 +181,7 @@ details[open] summary { margin-bottom: 0.6rem; }
       <h3>C, D, E: full model and gradient</h3>
       <ul>
         <li>C1: chosen scheme + CMFMC + PBL mixing</li>
-        <li>D1, D2: 4D-Var gradient with the averaging-kernel operator</li>
+        <li>D1, D2: 4D-Var gradient with the averaging-kernel operator <span class="chip ok">passed</span> (<a href="#d-osse3m">below</a>)</li>
         <li>E3 becomes CPU vs GPU (AT runs on one device); E2 is the fixed-order observation injection</li>
       </ul>
     </div>
@@ -469,6 +469,94 @@ details[open] summary { margin-bottom: 0.6rem; }
   </table>
   </div>
   <p class="meta">Pooled over the 6 receptors and about 60 perturbed cells; |FD| &gt; 1e-8. FD time: about 60 cells × 3 forward runs of 240 steps. The first scheme's adjoint time includes about 15 s of compilation. Scripts: <code>tests/b_adv/b_adv.jl</code> (tests), <code>tests/b_adv/fig_b_adv.py</code>, <code>tests/b_adv/fig_b12.py</code> (figures, statistics). Data: <code>/temp2/ksuselj/adjoint_exps/b_adv/</code>. Next: real MERRA-2 winds (B5), and the epsilon sweep (B3) once the limited scheme is chosen.</p>
+</section>
+
+<!-- ============================================================ PART D -->
+<section id="d-osse3m">
+  <h2>The 4D-Var gradient (D1, D2) and a 3-month OSSE test</h2>
+
+  <div class="callout prose" style="display:flex;flex-direction:column;gap:0.6rem">
+    <p><strong>Question.</strong> Does AT's full-model adjoint give the correct 4D-Var gradient over a 3-month window? And does a 4D-Var built on it work: does the cost function fall to the noise level and does the flux move towards the truth? This is a functional test before the 19-month OSSE, not a science or precision result.</p>
+    <p><strong>What is on.</strong> The full model as it will be used in the OSSE: monotone PPM advection, convection (CMFMC), Holtslag–Boville PBL mixing, surface flux at the centre of the X Y Z [S V] Z Y X step. AT's discrete adjoint (no reversed-wind variant), C48, 72 levels, MERRA-2, GPU (L40S).</p>
+    <p><strong>Truth and initial condition.</strong> GCHP's CO₂ field of 1 October 2015 (C24, remapped to C48), run forward with the truth fluxes to 31 December 2015 (spin-up). Both the 4D-Var and the truth start from that state on 1 January 2016, so the initial condition is exact. Window: 1 January – 31 March 2016.</p>
+    <p><strong>Fluxes.</strong> Truth: ORCHIDEE TER and GPP, ECCO-Darwin ocean, fossil fuel and CARDAMOM-ECCO (hourly), as in the GCHP OSSE. OSSE 1 design: prior = truth TER and ocean × 1.3; control = monthly scale factors of TER and of ocean on every C48 cell (82 944 elements); σ<sub>b</sub> = 0.2, diagonal B; bounds TER [0, 4], ocean [−4, 4]. GPP, fossil and CARDAMOM are fixed at the truth.</p>
+    <p><strong>Observations.</strong> Pseudo OCO-2 B10 soundings (land nadir, land glint and ocean glint), January–March 2016: 55 033. y = AT's XCO₂ of the truth run (OCO-2 averaging kernel and prior) + the noise stored for the GCHP OSSE (seed 1); σ<sub>o</sub> = the retrieval uncertainty.</p>
+    <p><strong>Optimizer.</strong> A Julia port of the GCHP L-BFGS-B step (<code>lbfgsb_step_monthly.py</code>: Armijo backtracking, keep-best iterate, bounds by clipping, first step at most σ<sub>b</sub>), 20 evaluations, Float32 model, J<sub>obs</sub> summed in Float64.</p>
+    <p><strong>What would mean it works.</strong> D1 and D2 at the level of GCHP's discrete adjoint (0.12 % and 1e-4); 2 J<sub>obs</sub>/N → 1; the TER error falling most of the way to the truth. With a diagonal B the ocean is expected to stay near the prior, as in GCHP.</p>
+  </div>
+
+  <h3>Summary</h3>
+  <ul class="prose" style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.3rem">
+    <li><strong>D1 and D2 pass, in Float64, at the first iterate.</strong> D1 (12 control elements, central FD ±0.05): weighted error 0.055 %, slope 1.00001 (GCHP discrete 0.12 %). D2 (Taylor test): g·d / G − 1 = −8.0e-7 (GCHP discrete −1.3e-4); the residual (ΔJ − ε g·d)/ε² is constant (7.64e5 to 7.65e5) for every ε, the curvature of J, with no change of sign.</li>
+    <li><strong>The Float32 gradient equals the Float64 one to 2e-4</strong> (weighted relative difference: TER 1.8e-4, ocean 2.1e-4). J differs by 2.4e-4 and the simulated XCO₂ by 4e-4 ppm rms after 3 months.</li>
+    <li><strong>The 4D-Var works.</strong> J falls by a factor of 12 (3.71e5 → 3.10e4) in 20 evaluations, every step accepted. 2 J<sub>obs</sub>/N reaches 1.004 (noise level 0.997).</li>
+    <li><strong>TER:</strong> the January–March error falls from +8.98 to +0.80 PgC (−91 %); the cell RMSE falls by 63 %. January and February are corrected to within 0.13 PgC; March keeps +0.60 PgC, the least constrained month (fewest observations follow it in the window).</li>
+    <li><strong>Ocean: not corrected</strong> (−0.255 → −0.272 PgC; cell RMSE +5 %), the diagonal-B behaviour GCHP also showed.</li>
+    <li><strong>A bug found by this test:</strong> the first run stalled at +7.2 PgC because our observation operator applied the pressure weights twice (the OCO-2 kernel we passed was already pressure-weighted), making XCO₂ about 20× too insensitive. Fixed and rerun; everything here is from the fixed run. Details in <code>docs/FINDINGS.md</code>.</li>
+  </ul>
+
+  <h3>D1 and D2: the gradient</h3>
+  <p class="prose"><strong>Setup.</strong> At x = 1 (the prior, J<sub>b</sub> = 0), Float64, same window and observations. D1: the 8 TER elements of largest |∂J/∂x|, the 2 largest ocean elements and 2 further land cells, each changed by ±0.05 (central FD; J would be exactly quadratic in x for a linear model, and the monotone limiter makes it nearly so). D2: J along d = −g/max|g| at ε = 0.1, 0.03, 0.01, 0.003; ΔJ/ε = G + c ε fitted to the two smallest ε; error = g·d/G − 1.</p>
+  <figure>
+    <img src="img/fig_3m_gradient.png?v=ab15fef417" alt="D1 adjoint against finite differences, its relative error, and the D2 Taylor test ratio against epsilon" loading="lazy">
+    <figcaption><strong>D1 and D2.</strong> (a) |adjoint| against |FD| ∂J/∂x for the 12 elements (green TER, purple ocean); (b) |adjoint/FD − 1|; (c) ΔJ/(ε g·d) against ε, which tends to 1 linearly (J is quadratic). The largest D1 errors (2e-3, three TER cells) are where the limiter switches within ±0.05; the error of the gradient itself is the D2 number.</figcaption>
+  </figure>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Test</th><th class="num">AT discrete, Float64</th><th class="num">GCHP discrete</th><th class="num">GCHP continuous</th><th>Pass level</th></tr></thead>
+    <tbody>
+      <tr><td>D1 weighted error Σ|adj − FD| / Σ|FD|</td><td class="num">0.055 %</td><td class="num">0.12 %</td><td class="num">1.07 %</td><td>~0.1 %</td></tr>
+      <tr><td>D1 slope</td><td class="num">1.00001</td><td class="num">0.9994</td><td class="num">–</td><td></td></tr>
+      <tr><td>D2 g·d / G − 1</td><td class="num">−8.0e-7</td><td class="num">−1.3e-4</td><td class="num">−7.3e-3</td><td>~1e-4</td></tr>
+      <tr><td>Float32 vs Float64 gradient, weighted (TER / ocean)</td><td class="num">1.8e-4 / 2.1e-4</td><td class="num">–</td><td class="num">–</td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>The 3-month 4D-Var</h3>
+  <figure>
+    <img src="img/fig_3m_cost.png?v=ded3f5af28" alt="Cost function, its observation and background terms, and 2 J_obs over N per evaluation" loading="lazy" style="max-width:640px">
+    <figcaption><strong>Cost function per evaluation.</strong> (a) J, with J at the true fluxes (dotted, 8.27e4). (b) J<sub>obs</sub> and J<sub>b</sub>; grey lines: J<sub>obs</sub>(truth) = 2.74e4 (the noise) and J<sub>b</sub>(truth) = 5.52e4 (the truth is 1/1.3 = 0.77 in every element, 1.15 σ<sub>b</sub> from the prior). (c) 2 J<sub>obs</sub>/N; 1 = the noise level. As in GCHP, the minimizer ends below J(truth) (expected: J<sub>b</sub> at the minimum is small) and J<sub>obs</sub> ends just above J<sub>obs</sub>(truth) (2.76e4 vs 2.74e4), so there is no overfitting.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/fig_3m_flux_error.png?v=da7499dc2c" alt="TER and ocean flux error and cell RMSE change per evaluation" loading="lazy">
+    <figcaption><strong>Flux error per evaluation.</strong> Top: January–March global total minus truth; bottom: change of the cell RMSE (monthly flux per C48 cell, over the cells with flux) relative to the prior. Left TER, right ocean.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/fig_3m_monthly.png?v=09f6b7ac4d" alt="Global monthly TER and ocean totals for truth, prior and posterior" loading="lazy">
+    <figcaption><strong>Global monthly totals</strong> of TER (a) and ocean (b): truth black, prior grey dashed, posterior (evaluation 20) orange.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/fig_3m_maps.png?v=997809463c" alt="Maps of the January to March TER and ocean flux error, prior and posterior" loading="lazy">
+    <figcaption><strong>January–March flux error per C48 cell</strong> [gC m⁻²]: TER (top) and ocean (bottom), prior (left) and posterior (right). The TER error is removed over the tropics and the southern continents, leaving cell-scale noise of both signs; the ocean posterior is the prior.</figcaption>
+  </figure>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Month (2016)</th><th class="num">TER truth</th><th class="num">prior</th><th class="num">posterior</th><th class="num">ocean truth</th><th class="num">prior</th><th class="num">posterior</th></tr></thead>
+    <tbody>
+      <tr><td>January</td><td class="num">10.05</td><td class="num">13.07</td><td class="num">10.18</td><td class="num">−0.304</td><td class="num">−0.396</td><td class="num">−0.404</td></tr>
+      <tr><td>February</td><td class="num">9.37</td><td class="num">12.18</td><td class="num">9.45</td><td class="num">−0.258</td><td class="num">−0.335</td><td class="num">−0.342</td></tr>
+      <tr><td>March</td><td class="num">10.50</td><td class="num">13.65</td><td class="num">11.10</td><td class="num">−0.286</td><td class="num">−0.372</td><td class="num">−0.375</td></tr>
+      <tr><td><strong>Jan–Mar</strong></td><td class="num">29.92</td><td class="num">38.90</td><td class="num">30.72</td><td class="num">−0.848</td><td class="num">−1.103</td><td class="num">−1.120</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="meta">PgC per month. Scripts: <code>osses/driver/truth_run.jl</code>, <code>fourdvar_3month.jl</code> (4D-Var; <code>--mode gradtest</code> for D1/D2), <code>lbfgsb.jl</code>, <code>fig_fourdvar_3m.py</code>; data in <code>/temp2/ksuselj/adjoint_exps/osses/</code>.</p>
+
+  <h3>Timing</h3>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Step (C48, one L40S GPU)</th><th class="num">Float32</th><th class="num">Float64</th></tr></thead>
+    <tbody>
+      <tr><td>Truth forward run, 6 months (Oct 2015 – Mar 2016)</td><td class="num">2.7 min</td><td class="num">–</td></tr>
+      <tr><td>Met of 91 days into host memory (one-off)</td><td class="num">2.8 min, 73 GiB</td><td class="num">4.9 min, ~146 GiB</td></tr>
+      <tr><td>One evaluation, forward + adjoint, 91 days, 55 033 soundings</td><td class="num">93 s</td><td class="num">5.2 min</td></tr>
+      <tr><td>One cost-only evaluation (forward only)</td><td class="num">–</td><td class="num">1.3 min</td></tr>
+      <tr><td>4D-Var, 20 evaluations</td><td class="num">0.6 h</td><td class="num">–</td></tr>
+      <tr><td>D1 + D2 (24 + 4 cost-only runs)</td><td class="num">–</td><td class="num">0.7 h</td></tr>
+    </tbody>
+  </table>
+  </div>
 </section>
 </main>
 

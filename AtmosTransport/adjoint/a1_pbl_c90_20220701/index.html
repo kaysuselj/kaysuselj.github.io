@@ -72,8 +72,8 @@ details[open] summary { margin-bottom: 0.6rem; }
   <p class="meta"><a href="../../../">Home</a> › <a href="../../">AtmosTransport</a> › Adjoint tests</p>
   <div class="eyebrow">AtmosTransport.jl · CO₂ adjoint and 4D-Var</div>
   <h1>AT Adjoint Ladder</h1>
-  <p class="prose">Which adjoints AT can compute, which of them we have verified, the column tests (A1: boundary-layer mixing alone; A2, A3: convection and the surface-flux gradient), the first advection tests (B0, B4, B1, B2: the cubed sphere), the 4D-Var gradient tests (D1, D2), a 3-month OSSE test of the 4D-Var, and OSSE 1 over the full 19-month window. Part of the work towards a CO₂ 4D-Var flux inversion with <a href="https://github.com/RemoteSensingTools/AtmosTransport.jl">AtmosTransport.jl</a>.</p>
-  <p class="meta">Page generated 2026-11-24 16:05 PST · AT origin/main 78210a013, unmodified · figures carry their own "Made:" time</p>
+  <p class="prose">Which adjoints AT can compute, which of them we have verified, the column tests (A1: boundary-layer mixing alone; A2, A3: convection and the surface-flux gradient), the first advection tests (B0, B4, B1, B2: the cubed sphere), the 4D-Var gradient tests (D1, D2), a 3-month OSSE test of the 4D-Var, and OSSE 1 and OSSE 2 over the full 19-month window. Part of the work towards a CO₂ 4D-Var flux inversion with <a href="https://github.com/RemoteSensingTools/AtmosTransport.jl">AtmosTransport.jl</a>.</p>
+  <p class="meta">Page generated 2026-11-25 14:25 PST · AT origin/main 78210a013, unmodified · figures carry their own "Made:" time</p>
 </header>
 
 <!-- ============================================================ PART 1 -->
@@ -744,7 +744,7 @@ details[open] summary { margin-bottom: 0.6rem; }
 
   <h3>Observations and the truth</h3>
   <figure>
-    <img src="img/fig_osse1_obs.png?v=7ef25fa2b1" alt="OCO-2 soundings per day by mode, map of the soundings, and the truth XCO2 at the soundings by latitude band" loading="lazy">
+    <img src="img/fig_osse1_obs.png?v=c51820976c" alt="OCO-2 soundings per day by mode, map of the soundings, and the truth XCO2 at the soundings by latitude band" loading="lazy">
     <figcaption><strong>The observations of the OSSE.</strong> (a) Soundings per day by OCO-2 mode (350 035 in all: land nadir 58 544, land glint 54 185, ocean glint 237 306; median 640 per day; 36 days without data: 1–6 Oct 2015 (before the package's first sounding), 27 Oct – 1 Nov 2015, 29 Mar – 3 Apr 2016, 11–20 Aug 2016, 31 Dec 2016, 2 Jan 2017 (its 77 soundings dropped, see above) and 22–27 Feb 2017). (b) Number of soundings per 2° × 2° cell over the window: the ocean-glint tracks dominate; no data poleward of about 70° and over winter high latitudes. (c) The truth at the soundings: daily mean XCO₂ of the truth run (AT, before noise) south of 20° S, between 20° S and 20° N, and north of 20° N (days with at least 20 soundings). The northern drawdown of summer 2016 and the growth of about 2.5 ppm per year are visible; the observations are these values plus noise with a standard deviation of 0.80 ppm.</figcaption>
   </figure>
 
@@ -758,26 +758,70 @@ details[open] summary { margin-bottom: 0.6rem; }
   </ul>
 
   <figure>
-    <img src="img/fig_osse1_cost.png?v=929ea7c1ae" alt="Cost function, its observation and background parts, and 2 J_obs over N per evaluation of the long OSSE 1" loading="lazy">
+    <img src="img/fig_osse1_cost.png?v=f24b354cea" alt="Cost function, its observation and background parts, and 2 J_obs over N per evaluation of the long OSSE 1" loading="lazy">
     <figcaption><strong>Cost function per evaluation.</strong> (a) J, with J(truth) and GCHP's final J (C24, discrete adjoint) for orientation; (b) J<sub>obs</sub> and J<sub>b</sub>, with their values at the truth; (c) 2 J<sub>obs</sub>/N (1 = the noise level). J(truth) lies above J because J<sub>b</sub>(truth) grows with the number of controls: at C48 there are 4 times as many cells as at C24, so GCHP's J values are not directly comparable.</figcaption>
   </figure>
   <figure>
-    <img src="img/fig_osse1_flux_error.png?v=aaafeb2615" alt="2016 TER and ocean flux errors and cell RMSE change per evaluation" loading="lazy">
+    <img src="img/fig_osse1_flux_error.png?v=286547f37b" alt="2016 TER and ocean flux errors and cell RMSE change per evaluation" loading="lazy">
     <figcaption><strong>2016 flux errors per accepted evaluation.</strong> (a, b) global 2016 total minus truth for TER and ocean; (c, d) cell-month RMSE relative to the prior. Dashed: GCHP C24 final values (discrete adjoint).</figcaption>
   </figure>
   <figure>
-    <img src="img/fig_osse1_monthly.png?v=fd50c72cc2" alt="Monthly global TER and ocean totals over the 19-month window for truth, prior and posterior" loading="lazy">
+    <img src="img/fig_osse1_monthly.png?v=1450416e98" alt="Monthly global TER and ocean totals over the 19-month window for truth, prior and posterior" loading="lazy">
     <figcaption><strong>Monthly global totals</strong> of truth, prior and the final posterior over the whole window; grey: 2016. The last month (April 2017) is weakly constrained.</figcaption>
   </figure>
   <figure>
-    <img src="img/fig_osse1_maps.png?v=cdeafbf211" alt="Maps of the 2016 TER and ocean flux errors of the prior and of the posterior" loading="lazy">
+    <img src="img/fig_osse1_maps.png?v=bfa1b3c5c7" alt="Maps of the 2016 TER and ocean flux errors of the prior and of the posterior" loading="lazy">
     <figcaption><strong>2016 flux error maps</strong>, prior − truth and posterior − truth, for TER (a, b) and ocean (c, d), gC m⁻² yr⁻¹.</figcaption>
   </figure>
   <figure>
-    <img src="img/fig_osse1_transcom.png?v=42f2d406bc" alt="January to December 2016 TER totals for the 11 TransCom land regions and ocean totals for the 11 TransCom ocean regions, truth, prior and posterior" loading="lazy">
+    <img src="img/fig_osse1_transcom.png?v=b962514944" alt="January to December 2016 TER totals for the 11 TransCom land regions and ocean totals for the 11 TransCom ocean regions, truth, prior and posterior" loading="lazy">
     <figcaption><strong>TransCom regions, January–December 2016 totals</strong> (PgC yr⁻¹) of truth, prior and the final posterior: (a) TER of the 11 land regions, (b) ocean flux of the 11 ocean regions. Sum of the regional |posterior − truth|: TER 43.73 → 3.46 PgC (GCHP C24: 42.7 → 3.9 with the discrete adjoint, 4.2 with the continuous one); ocean 1.26 → 1.31 PgC (not corrected with a diagonal B). Regions: TransCom-3 map of the CarbonTracker regions file (1°); each C48 cell takes the region at its centre, and coastal cells with land (ocean) flux whose centre lies in an ocean (land) region go to the nearest land (ocean) region, so the regional totals add up to the global ones.</figcaption>
   </figure>
   <p class="meta">Scripts: <code>osses/driver/fourdvar_3month.jl</code> (run; options --mmap_dir, --stop_rel, --host_tape_gib), <code>osses/driver/fig_osse1_long.py</code> (figures, numbers: <code>results_osse1.txt</code>). Data: <code>/temp2/ksuselj/adjoint_exps/osses/osse1_long/</code>.</p>
+</section>
+
+<section id="osse2-long">
+  <div class="eyebrow">Part 6 · OSSE 2, 19-month window</div>
+  <h2>OSSE 2 over the full 19-month window</h2>
+
+  <div class="callout prose" style="display:flex;flex-direction:column;gap:0.6rem">
+    <p><strong>Status.</strong> Final: the run converged on 2026-11-24 at 22:09 PST after 21 evaluations (6.2 h including the met capture), when |ΔJ/J| stayed below 0.5 % on three accepted iterations.</p>
+    <p><strong>Question.</strong> OSSE 1 has a prior that is the truth scaled by 1.3, so the spatial and seasonal pattern of the prior is right. In OSSE 2 the prior comes from different models, so its pattern is wrong. Does AT's 4D-Var reproduce GCHP's OSSE 2 (C24; manuscript Table 4): the fall of J, the 2016 TER and ocean errors, and the TransCom regional errors?</p>
+    <p><strong>What is on.</strong> Same model, window, initial condition and observations as <a href="#osse1-long">OSSE 1</a>: monotone PPM, CMFMC convection, Holtslag–Boville PBL mixing, AT's discrete adjoint, C48, 72 levels, MERRA-2, Float32 on one L40S GPU; 1 October 2015 – 1 May 2017; the same 350 035 OCO-2 soundings with the same noise (the observation figure of OSSE 1 applies).</p>
+    <p><strong>OSSE 2 design.</strong> Prior TER = CLASS-CTEM, prior ocean = MOM6 (as in the GCHP OSSE 2), regridded to C48. Control = monthly scale factors of the prior on every C48 cell (2 × 19 × 13 824 elements). σ<sub>b</sub> = the files' relative uncertainty per cell and month (diagonal B), not rescaled from GCHP's C24 to C48. Bounds TER [0, 4], ocean [−4, 4]. The first step moves each element by at most one σ<sub>b</sub>, as GCHP's <code>lbfgsb_step_monthly.py</code>. Stopping rule as in OSSE 1. Since the truth is not a scaled prior, it cannot be written exactly in the control space: J<sub>b</sub>(truth) below uses truth/prior, clipped to the bounds, and is a lower bound.</p>
+    <p><strong>What would mean it works.</strong> 2 J<sub>obs</sub>/N close to GCHP's (1.18); the 2016 TER error reduced as in GCHP (DISC: −4.84 → −0.88 PgC), with the cell RMSE not improved (GCHP: +11 %), because a diagonal B cannot move the pattern of the prior; the ocean unchanged (GCHP: +1.04 → +1.06 PgC).</p>
+  </div>
+
+  <h3>Result</h3>
+  <ul class="prose" style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.3rem">
+    <li><strong>J fell from 2.528 × 10⁶ to 2.169 × 10⁵</strong> (a factor of 12) in 21 evaluations (one backtrack). GCHP C24: 2.59 × 10⁶ → 2.09 × 10⁵. J<sub>obs</sub> = 2.118 × 10⁵, 21 % above its value at the truth (the noise, 1.745 × 10⁵); 2 J<sub>obs</sub>/N = 1.21 (GCHP 1.18). Unlike OSSE 1, the fit does not reach the noise level: the prior's pattern errors cannot all be removed by scaling with a diagonal B.</li>
+    <li><strong>TER 2016 error: −4.84 → −0.97 PgC</strong> (GCHP C24: −0.88 with the discrete adjoint, −0.13 with the continuous one). The cell-month RMSE gets <em>worse</em> by 6.7 % against the prior (GCHP: +11 % discrete, +3 % continuous): the observations fix the large-scale totals, but the corrections go to the wrong cells.</li>
+    <li><strong>TransCom land regions:</strong> the sum of the regional 2016 TER errors falls from 8.33 to 4.31 PgC (GCHP: 7.3 → 3.4 discrete, 8.5 continuous). Most of the gain is Tropical Asia (prior 18.07, posterior 21.39, truth 22.76 PgC), then North American Temperate, Europe and South American Tropical; the Boreal regions and Australia move away from the truth.</li>
+    <li><strong>Ocean 2016 error: +1.04 → +1.08 PgC</strong> (GCHP: +1.06): not corrected, as in OSSE 1. The largest regional error, the Southern Ocean (prior −0.43, truth −1.14 PgC), is untouched. TER + ocean error +0.11 PgC: again the global total is constrained, the land–ocean split is not.</li>
+    <li><strong>About 16.8 min per evaluation</strong>, as in OSSE 1 (same GPU, same window).</li>
+  </ul>
+
+  <figure>
+    <img src="img/fig_osse2_cost.png?v=a6f0d67dc0" alt="Cost function, its observation and background parts, and 2 J_obs over N per evaluation of the long OSSE 2" loading="lazy">
+    <figcaption><strong>Cost function per evaluation.</strong> (a) J, with J(truth) and GCHP's final J (C24, discrete adjoint); (b) J<sub>obs</sub> and J<sub>b</sub>, with their values at the truth; (c) 2 J<sub>obs</sub>/N. Evaluation 2 is the rejected first trial step (J rose), followed by a backtrack. The final J<sub>b</sub> (5.0 × 10³) is far below J<sub>b</sub>(truth) (≥ 2.8 × 10⁵): measured in σ<sub>b</sub>, the posterior stays close to the prior, while the truth is far from it in many cells.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/fig_osse2_flux_error.png?v=434d37435b" alt="2016 TER and ocean flux errors and cell RMSE change per evaluation of OSSE 2" loading="lazy">
+    <figcaption><strong>2016 flux errors per accepted evaluation.</strong> (a, b) global 2016 total minus truth for TER and ocean; (c, d) cell-month RMSE relative to the prior. Dashed: GCHP C24 final values (discrete adjoint). The TER total overshoots on the first step and settles near GCHP's value; the cell RMSE grows slowly while the fit improves.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/fig_osse2_monthly.png?v=e7a7563a06" alt="Monthly global TER and ocean totals over the 19-month window for truth, prior and posterior of OSSE 2" loading="lazy">
+    <figcaption><strong>Monthly global totals</strong> of truth, prior and the final posterior; grey: 2016. TER follows the truth month by month (the largest corrections are in the first months of the window and in the northern summer); the ocean stays at the prior, which is a sink too weak by about 0.1 PgC per month from March to December 2016.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/fig_osse2_maps.png?v=2b76600752" alt="Maps of the 2016 TER and ocean flux errors of the prior and of the posterior of OSSE 2" loading="lazy">
+    <figcaption><strong>2016 flux error maps</strong>, prior − truth and posterior − truth, for TER (a, b) and ocean (c, d), gC m⁻² yr⁻¹. Over the Maritime Continent the prior is too low in a few cells; the posterior raises TER over the whole region, which reduces the regional error but makes the neighbouring cells too high. The ocean maps do not change.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/fig_osse2_transcom.png?v=88a3e07bf9" alt="January to December 2016 TER totals for the 11 TransCom land regions and ocean totals for the 11 TransCom ocean regions, truth, prior and posterior of OSSE 2" loading="lazy">
+    <figcaption><strong>TransCom regions, January–December 2016 totals</strong> (PgC yr⁻¹) of truth, prior and the final posterior: (a) TER of the 11 land regions, (b) ocean flux of the 11 ocean regions. Sum of the regional |posterior − truth|: TER 8.33 → 4.31 PgC (GCHP C24: 7.3 → 3.4 discrete, 8.5 continuous); ocean 1.76 → 1.78 PgC. Regions as in OSSE 1.</figcaption>
+  </figure>
+  <p class="meta">Scripts: <code>osses/driver/fourdvar_3month.jl --osse 2</code> (run), <code>osses/driver/fig_osse1_long.py --osse 2</code> (figures, numbers: <code>results_osse2.txt</code>). Data: <code>/temp2/ksuselj/adjoint_exps/osses/osse2_long/</code>.</p>
 </section>
 </main>
 

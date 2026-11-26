@@ -72,8 +72,8 @@ details[open] summary { margin-bottom: 0.6rem; }
   <p class="meta"><a href="../../../">Home</a> › <a href="../../">AtmosTransport</a> › Adjoint tests</p>
   <div class="eyebrow">AtmosTransport.jl · CO₂ adjoint and 4D-Var</div>
   <h1>AT Adjoint Ladder</h1>
-  <p class="prose">Which adjoints AT can compute, which of them we have verified, the column tests (A1: boundary-layer mixing alone; A2, A3: convection and the surface-flux gradient), the first advection tests (B0, B4, B1, B2: the cubed sphere), the 4D-Var gradient tests (D1, D2), a 3-month OSSE test of the 4D-Var, and OSSE 1 and OSSE 2 over the full 19-month window. Part of the work towards a CO₂ 4D-Var flux inversion with <a href="https://github.com/RemoteSensingTools/AtmosTransport.jl">AtmosTransport.jl</a>.</p>
-  <p class="meta">Page generated 2026-11-25 14:25 PST · AT origin/main 78210a013, unmodified · figures carry their own "Made:" time</p>
+  <p class="prose">Which adjoints AT can compute, which of them we have verified, the column tests (A1: boundary-layer mixing alone; A2, A3: convection and the surface-flux gradient), the first advection tests (B0, B4, B1, B2: the cubed sphere), the 4D-Var gradient tests (D1, D2), a 3-month OSSE test of the 4D-Var, OSSE 1 and OSSE 2 over the full 19-month window, and OSSE 2a (wrong TER prior only). Part of the work towards a CO₂ 4D-Var flux inversion with <a href="https://github.com/RemoteSensingTools/AtmosTransport.jl">AtmosTransport.jl</a>.</p>
+  <p class="meta">Page generated 2026-11-26 12:45 PST · AT origin/main 78210a013, unmodified · figures carry their own "Made:" time</p>
 </header>
 
 <!-- ============================================================ PART 1 -->
@@ -822,6 +822,64 @@ details[open] summary { margin-bottom: 0.6rem; }
     <figcaption><strong>TransCom regions, January–December 2016 totals</strong> (PgC yr⁻¹) of truth, prior and the final posterior: (a) TER of the 11 land regions, (b) ocean flux of the 11 ocean regions. Sum of the regional |posterior − truth|: TER 8.33 → 4.31 PgC (GCHP C24: 7.3 → 3.4 discrete, 8.5 continuous); ocean 1.76 → 1.78 PgC. Regions as in OSSE 1.</figcaption>
   </figure>
   <p class="meta">Scripts: <code>osses/driver/fourdvar_3month.jl --osse 2</code> (run), <code>osses/driver/fig_osse1_long.py --osse 2</code> (figures, numbers: <code>results_osse2.txt</code>). Data: <code>/temp2/ksuselj/adjoint_exps/osses/osse2_long/</code>.</p>
+</section>
+
+<section id="osse2a">
+  <div class="eyebrow">Part 7 · OSSE 2a, wrong TER prior only</div>
+  <h2>OSSE 2a: the TER problem on its own</h2>
+
+  <div class="callout prose" style="display:flex;flex-direction:column;gap:0.6rem">
+    <p><strong>Status.</strong> Final. 2a-diag converged on 2026-11-25 at 22:53 PST after 26 evaluations (7.8 h including the met capture); 2a-add on 2026-11-26 at 08:32 PST after 32 evaluations (9.6 h). Both on one L40S GPU, about 17 min per evaluation.</p>
+    <p><strong>Question.</strong> <a href="#osse2-long">OSSE 2</a> mixes two problems: the TER prior has the wrong pattern, and the ocean prior is wrong but does not move. Its TER total improved while the cell RMSE got worse (+7 %). OSSE 2a takes the ocean problem away to ask: with only the TER prior wrong, does the land RMSE improve? And is the degradation caused by the cells where the prior is 0 but the truth is not?</p>
+    <p><strong>Why the zero-prior cells.</strong> CLASS-CTEM (the TER prior) is exactly 0 in cells where the truth (ORCHIDEE) has 6.5 PgC of TER in 2016, mostly the Maritime Continent: 4°×5° boxes the data set marks as missing, and coastal boxes that CLASS-CTEM counts as ocean. A scale factor cannot create flux where the prior is 0.</p>
+    <p><strong>What is on.</strong> Everything as in OSSE 2 (model, window 1 October 2015 – 1 May 2017, initial condition, 350 035 OCO-2 soundings with the same noise, diagonal B, bounds TER [0, 4], ocean [−4, 4], stopping rule), except: the ocean prior is the truth (ECCO-Darwin), so any ocean change is an error. Two runs:</p>
+    <ul style="margin:0;padding-left:1.2rem">
+      <li><strong>2a-diag:</strong> TER prior CLASS-CTEM, monthly scale factors per cell, as OSSE 2.</li>
+      <li><strong>2a-add:</strong> as 2a-diag plus an additive TER control in each cell-month where CLASS-CTEM is 0 and the 4°×5° box has a land fraction ≥ 0.05 (480 cells per month, 9120 elements): flux = x · prior + z · REF, z prior 0, σ 1, bounds [0, 4]. REF is a neighbour flux: the Gaussian-weighted (500 km) mean TER per land fraction of nearby cells with a nonzero prior, times the cell's land fraction. The truth is not used. AT's adjoint is unchanged: ∂J/∂z = (∂J/∂F) · REF.</li>
+    </ul>
+    <p><strong>What would mean it works.</strong> 2a-diag: the TER total recovered and the ocean left at the truth. 2a-add: the missing TER put back in the zero-prior cells, and the cell RMSE no longer worse than the prior.</p>
+  </div>
+
+  <h3>Result</h3>
+  <ul class="prose" style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.3rem">
+    <li><strong>The global TER total is recovered:</strong> 2016 error −4.84 → −0.16 PgC (2a-diag) and −0.14 PgC (2a-add); OSSE 2 reached −0.97. The TransCom TER Σ|error| falls 8.33 → 3.04 and 3.03 PgC (OSSE 2: 4.31). 2 J<sub>obs</sub>/N 17.9 → 1.14 in both (OSSE 2: 1.21).</li>
+    <li><strong>The cell RMSE still gets worse:</strong> +8.6 % (2a-diag) and +3.5 % (2a-add) for cell-months. Away from the zero-prior cells (> 1000 km) it improves, by 10 % and 11 %. Aggregated to blocks of 8×8 C48 cells (about 1600 km) or larger, RMSE improves by 35–60 % (figure below).</li>
+    <li><strong>The missing TER goes to the wrong cells (aliasing).</strong> In the zero-prior cells the 2016 error stays at −6.5 PgC (2a-diag) and −6.2 PgC (2a-add). The optimizer instead raises the scale factors of nearby cells with large TER (New Guinea, Borneo, Sumatra) by up to 3×.</li>
+    <li><strong>The additive control is hardly used:</strong> it adds 0.76 PgC in 2016, while the truth in those cells is 4.9 PgC (z median 0.03, none at the bound). REF has about the right total (4.6 PgC) but the wrong pattern: it spreads flux over many coastal cells where the truth is 0, while in the cells with large truth TER the truth is 5–7 × REF. Reaching it would cost about 18 per element in J<sub>b</sub>; scaling up the neighbours is cheaper.</li>
+    <li><strong>Small nonzero priors are just as stuck.</strong> Cells where CLASS-CTEM is below a quarter of the truth have only the scale factor, which adds (x − 1) × prior and is bounded by x ≤ 4. 2016 TER missing in the prior and left in 2a-add: prior = 0: 6.49 → 6.20 PgC; prior/truth &lt; 0.25: 1.51 → 1.50; 0.25–0.5: 2.35 → 2.06. These 9.8 PgC are compensated by +10.1 PgC in the cells where the prior is at least half the truth.</li>
+    <li><strong>The correct ocean moves:</strong> +0.16 (2a-diag) and +0.15 PgC (2a-add) in 2016, mostly the Southern Ocean and the northern Pacific and Atlantic. Part of the TER signal is put into the ocean.</li>
+  </ul>
+  <p class="prose"><strong>Next.</strong> An additive TER control in every land cell, with σ in absolute flux units tied to the neighbourhood TER (not the cell's own prior), so small and zero priors can move; and the correlated B (500–2000 km, 1 month) of the science plan, so neighbours cannot absorb the deficit independently.</p>
+
+  <figure>
+    <img src="img/fig_osse2a_cost.png?v=a68f626426" alt="Cost function and 2 J_obs over N per evaluation for OSSE 2, 2a-diag and 2a-add" loading="lazy">
+    <figcaption><strong>Cost function per evaluation</strong> for OSSE 2 (grey), 2a-diag and 2a-add: (a) J, (b) 2 J<sub>obs</sub>/N. 2a starts higher than OSSE 2 (3.14 vs 2.53 × 10⁶) because in OSSE 2 the ocean error (+1.04 PgC) partly offsets the TER error (−4.84 PgC); with the ocean right, the full TER deficit is seen. Both 2a runs end at a lower J than OSSE 2.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/fig_osse2a_flux_error.png?v=5c409a3218" alt="2016 TER and ocean errors, TER cell RMSE change, and the TER error in the zero-prior cells per accepted evaluation" loading="lazy">
+    <figcaption><strong>2016 errors per accepted evaluation.</strong> (a) TER global total − truth; (b) ocean global total − truth (0 at the start in 2a); (c) TER cell-month RMSE relative to the prior; (d) TER total − truth in the cells where CLASS-CTEM is 0 (the error that a scale factor cannot remove). The total is fixed within 10 evaluations; the RMSE degrades as the fit continues; (d) barely moves, even with the additive control.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/fig_osse2a_scale.png?v=f3e6885dcf" alt="TER RMSE change against the prior as a function of aggregation block size, monthly and annual 2016" loading="lazy">
+    <figcaption><strong>TER RMSE change against the prior versus aggregation scale</strong>, 2016: (a) monthly, (b) annual totals of b × b blocks of C48 cells within a cube face (about 200 b km; "panel" = a whole face, 1/6 of the globe). Below about 800 km the posterior is worse than the prior; from 1600 km up it is 30–60 % better, more so in 2a than in OSSE 2. The observations constrain the large scales; the diagonal B puts the correction in the wrong cells within them.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/fig_osse2a_zoom.png?v=682372b398" alt="Maritime Continent maps of the truth TER, the prior error, the posterior errors of 2a-diag and 2a-add, and the additive part" loading="lazy">
+    <figcaption><strong>Maritime Continent, 2016</strong>, gC m⁻² yr⁻¹: (a) truth TER; (b) prior − truth; (c) 2a-diag − truth; (d) 2a-add − truth; (e) the additive part z · REF of 2a-add. Black dots: cells where CLASS-CTEM is 0 in some month while the truth is not. The blue deficit stays in the dotted cells; the posterior raises the neighbouring cells instead (red). The box total is nearly right (−0.19 and −0.18 PgC against −4.66 in the prior).</figcaption>
+  </figure>
+  <figure>
+    <img src="img/fig_osse2a_maps.png?v=dfc77ab39f" alt="Global maps of the 2016 TER error of the prior, 2a-diag and 2a-add, and the ocean error of 2a-diag and 2a-add" loading="lazy">
+    <figcaption><strong>2016 error maps</strong>, gC m⁻² yr⁻¹: TER prior − truth (a), 2a-diag (b) and 2a-add (c) − truth; ocean 2a-diag (d) and 2a-add (e) − truth (the ocean prior is the truth, so these are errors the inversion created; note the smaller color range).</figcaption>
+  </figure>
+  <figure>
+    <img src="img/fig_osse2a_monthly.png?v=7eb1ddefc7" alt="Monthly global TER and ocean totals for truth, prior, OSSE 2, 2a-diag and 2a-add" loading="lazy">
+    <figcaption><strong>Monthly global totals</strong> of truth, the 2a prior and the posteriors (grey band: 2016). TER follows the truth month by month in both 2a runs; the ocean moves slightly above the truth (a weaker sink). OSSE 2's ocean (grey) is shown for comparison; its prior was MOM6, not the truth.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/fig_osse2a_transcom.png?v=472e6c085b" alt="2016 TER totals of the 11 TransCom land regions and ocean totals of the 11 ocean regions for truth, prior, OSSE 2, 2a-diag and 2a-add" loading="lazy">
+    <figcaption><strong>TransCom regions, 2016 totals</strong> (PgC yr⁻¹): (a) TER, (b) ocean. Tropical Asia gains most (prior 18.1, 2a 22.1, truth 22.8 PgC). The ocean regional error of 2a (0.16 PgC, mostly the Southern Ocean) is small, but the prior had none.</figcaption>
+  </figure>
+  <p class="meta">Scripts: <code>osses/driver/fourdvar_3month.jl --osse 2 --ocn_prior truth [--ter_add TER/CLASS-CTEM-addref]</code> (runs), <code>osses/driver/fill_prior.py</code> (REF of the additive control), <code>osses/driver/fig_osse2ab.py --set 2a</code> (figures, numbers: <code>results_osse2a.txt</code>). Data: <code>/temp2/ksuselj/adjoint_exps/osses/osse2a_{diag,add}/</code>.</p>
 </section>
 </main>
 
